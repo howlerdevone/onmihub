@@ -1,12 +1,15 @@
 import os
-from supabase import create_client, Client
+
+from supabase import Client, create_client
+
 # Note: environment loading is intentionally performed at application startup
 # (e.g. in `omnihub.cli`) to keep this module focused solely on Supabase
 # client creation and to avoid side-effects during library import.
 
+
 def get_supabase_client() -> Client:
     """
-    Infrastructure factory utility to instantiate and retrieve the official 
+    Infrastructure factory utility to instantiate and retrieve the official
     Supabase client SDK using strict validated environment variables boundary.
     """
     supabase_url = os.environ.get("SUPABASE_URL")

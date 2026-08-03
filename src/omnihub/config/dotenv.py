@@ -1,5 +1,5 @@
-from pathlib import Path
 import os
+from pathlib import Path
 
 
 def load_dotenv_if_present(env_path: Path | None = None) -> None:

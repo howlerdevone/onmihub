@@ -1,27 +1,25 @@
 import contextlib
 import logging
 import os
-from typing import Awaitable, Callable
+from collections.abc import Awaitable, Callable
 
 import asyncpg
 from fastapi import FastAPI, Request
 from fastapi.responses import Response
 
-from omnihub.gateway.supabase import get_supabase_client
 from omnihub.common.db.pg_client import PgClient
+from omnihub.gateway.supabase import get_supabase_client
 
 logger = logging.getLogger(__name__)
 
 # Extract database credentials or fallback to local Docker composition settings on port 5433
-DATABASE_DSN = os.environ.get(
-    "DATABASE_URL", 
-    "postgres://omni_user:omni_password@localhost:5433/omnihub_dev"
-)
+DATABASE_DSN = os.environ.get("DATABASE_URL", "postgres://omni_user:omni_password@localhost:5433/omnihub_dev")
+
 
 @contextlib.asynccontextmanager
 async def database_lifespan(app: FastAPI):
     """
-    Manages the global setup and safety cleanup of the high-performance asyncpg 
+    Manages the global setup and safety cleanup of the high-performance asyncpg
     pool connection during application boot and graceful system shutdown boundaries.
     """
     app.state.db_pool = await asyncpg.create_pool(
@@ -51,8 +49,8 @@ async def inject_db_connection_middleware(
     request: Request, call_next: Callable[[Request], Awaitable[Response]]
 ) -> Response:
     """
-    High-performance HTTP Request Middleware. Automatically acquires a dedicated 
-    standalone connection from the pool, embedding it inside the request state 
+    High-performance HTTP Request Middleware. Automatically acquires a dedicated
+    standalone connection from the pool, embedding it inside the request state
     before routing traffic to adapters, returning it safely upon request completion.
     """
     # Provide a `PgClient` instance to downstream handlers via request.state

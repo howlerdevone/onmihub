@@ -1,5 +1,4 @@
 import os
-from typing import Optional
 
 import uvicorn
 from fastapi import FastAPI
@@ -17,9 +16,7 @@ def create_app() -> FastAPI:
     """Create and configure the FastAPI application instance."""
     app = FastAPI(
         title="Omnihub API Engine",
-        description=(
-            "Hexagonal, DDD-driven multi-tenant Agentic AI infrastructure orchestrator."
-        ),
+        description=("Hexagonal, DDD-driven multi-tenant Agentic AI infrastructure orchestrator."),
         version="1.0.0",
         lifespan=database_lifespan,
     )
@@ -46,7 +43,7 @@ def create_app() -> FastAPI:
 application: FastAPI = create_app()
 
 
-def app(host: Optional[str] = None, port: Optional[int] = None) -> None:
+def app(host: str | None = None, port: int | None = None) -> None:
     host = host or os.environ.get("HOST", "127.0.0.1")
     port = int(port or os.environ.get("PORT", "8000"))
     reload_enabled = os.environ.get("OMNIHUB_RELOAD", "false").lower() in {

@@ -1,5 +1,3 @@
-from .pg_client import (PgClient)
+from .pg_client import PgClient
 
-__all__ = [
-  "PgClient"
-]
+__all__ = ["PgClient"]
