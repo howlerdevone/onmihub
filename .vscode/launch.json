@@ -1,0 +1,16 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Python: FastAPI",
+            "type": "debugpy",
+            "request": "launch",
+            "module": "omnihub",
+            "env": {
+                "OMNIHUB_RELOAD": "true"
+            },
+            "cwd": "${workspaceFolder}",
+            "jinja": true
+        }
+    ]
+}

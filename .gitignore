@@ -52,3 +52,24 @@ site/
 # IDE files
 # .idea/
 # .vscode/
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Docker volumes (local data)
+postgres_data/
+
+# Logs
+*.log
+logs/
+
+# Celery
+celerybeat-schedule
+celerybeat.pid
+
+# Secrets / keys
+*.pem
+*.key
+*.p12

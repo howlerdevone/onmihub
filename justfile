@@ -1,5 +1,44 @@
 # Justfile for omnihub
 
+
+# ------------------------------------------------------------------------------
+# INFRASTRUCTURE (Docker)
+# ------------------------------------------------------------------------------
+
+# Start Postgres and Redis services in the background
+docker-up:
+    docker compose up -d
+
+# Stop Docker services without removing data
+docker-down:
+    docker compose down
+
+# Shut down services and remove volumes (full cleanup)
+docker-destroy:
+    docker compose down -v
+
+# ------------------------------------------------------------------------------
+# DATABASE & MIGRATIONS (dbmate)
+# ------------------------------------------------------------------------------
+
+# Create a new migration (e.g.: just db-new create_users_table)
+db-new NAME:
+    dbmate new {{NAME}}
+
+# Ensure Docker is running and apply all pending migrations
+db-up: docker-up
+    @echo "Waiting for Postgres to respond..."
+    @sleep 2
+    dbmate up
+
+# Roll back the last applied migration
+db-rollback:
+    dbmate rollback
+
+# Show the current migrations status
+db-status:
+    dbmate status
+
 # Show available commands
 list:
     @just --list
@@ -103,3 +142,11 @@ clean-test:
 publish:
     uv build
     uv publish
+
+# Start the FastAPI development server with auto-reload
+dev:
+    OMNIHUB_RELOAD=true uv run python -m omnihub
+
+# Start the Celery worker (change 'config' to your celery module name)
+worker:
+    uv run celery -A main.celery_app worker --loglevel=info
