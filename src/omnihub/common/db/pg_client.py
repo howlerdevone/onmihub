@@ -7,43 +7,43 @@ import asyncpg
 
 
 class PgClient:
-    def __init__(self, dsn: str):
-        self.dsn = dsn
-        self.pool: asyncpg.Pool | None = None
+  def __init__(self, dsn: str):
+    self.dsn = dsn
+    self.pool: asyncpg.Pool | None = None
 
-    async def __aenter__(self) -> PgClient:
-        self.pool = await asyncpg.create_pool(dsn=self.dsn)
-        return self
+  async def __aenter__(self) -> PgClient:
+    self.pool = await asyncpg.create_pool(dsn=self.dsn)
+    return self
 
-    async def __aexit__(
-        self,
-        exc_type: type[BaseException] | None,
-        exc_val: BaseException | None,
-        exc_tb: TracebackType | None,
-    ) -> None:
-        if self.pool:
-            await self.pool.close()
+  async def __aexit__(
+    self,
+    exc_type: type[BaseException] | None,
+    exc_val: BaseException | None,
+    exc_tb: TracebackType | None,
+  ) -> None:
+    if self.pool:
+      await self.pool.close()
 
-    async def execute(self, query: str, *args: Any) -> Any:
-        if not self.pool:
-            raise RuntimeError("Database connection pool is not initialized.")
-        async with self.pool.acquire() as connection:
-            return await connection.execute(query, *args)
+  async def execute(self, query: str, *args: Any) -> Any:
+    if not self.pool:
+      raise RuntimeError("Database connection pool is not initialized.")
+    async with self.pool.acquire() as connection:
+      return await connection.execute(query, *args)
 
-    async def fetch(self, query: str, *args: Any) -> list[asyncpg.Record]:
-        if not self.pool:
-            raise RuntimeError("Database connection pool is not initialized.")
-        async with self.pool.acquire() as connection:
-            return await connection.fetch(query, *args)
+  async def fetch(self, query: str, *args: Any) -> list[asyncpg.Record]:
+    if not self.pool:
+      raise RuntimeError("Database connection pool is not initialized.")
+    async with self.pool.acquire() as connection:
+      return await connection.fetch(query, *args)
 
-    async def fetchrow(self, query: str, *args: Any) -> asyncpg.Record | None:
-        if not self.pool:
-            raise RuntimeError("Database connection pool is not initialized.")
-        async with self.pool.acquire() as connection:
-            return await connection.fetchrow(query, *args)
+  async def fetchrow(self, query: str, *args: Any) -> asyncpg.Record | None:
+    if not self.pool:
+      raise RuntimeError("Database connection pool is not initialized.")
+    async with self.pool.acquire() as connection:
+      return await connection.fetchrow(query, *args)
 
-    async def fetchval(self, query: str, *args: Any) -> Any:
-        if not self.pool:
-            raise RuntimeError("Database connection pool is not initialized.")
-        async with self.pool.acquire() as connection:
-            return await connection.fetchval(query, *args)
+  async def fetchval(self, query: str, *args: Any) -> Any:
+    if not self.pool:
+      raise RuntimeError("Database connection pool is not initialized.")
+    async with self.pool.acquire() as connection:
+      return await connection.fetchval(query, *args)

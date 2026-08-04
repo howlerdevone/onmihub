@@ -28,11 +28,12 @@ class LoginRequest(BaseModel):
 
 class LoginResponse(BaseModel):
   """
-  Unified authentication payload returned to Next.js containing 
+  Unified authentication payload returned to Next.js containing
   the active session keys and local multi-tenant profiling metadata.
   """
+
   status: str
-  access_token: str       
+  access_token: str
   refresh_token: str
   expires_at: datetime
   user: AuthUserResponse | None = None
@@ -47,6 +48,7 @@ class RefreshSessionResponse(BaseModel):
   access_token: str
   refresh_token: str
   expires_at: datetime
+
 
 class RegistrationRequest(BaseModel):
   """
@@ -64,11 +66,12 @@ class RegistrationRequest(BaseModel):
 
 class RegistrationResponse(BaseModel):
   """
-  Unified authentication payload returned to frontend containing 
+  Unified authentication payload returned to frontend containing
   the active session keys and local multi-tenant profiling metadata.
   """
+
   status: str
-  access_token: str       
+  access_token: str
   refresh_token: str
   expires_at: datetime
   user: AuthUserResponse | None = None

@@ -4,5 +4,5 @@ import omnihub
 
 
 def test_import():
-    """Verify the package can be imported."""
-    assert omnihub
+  """Verify the package can be imported."""
+  assert omnihub

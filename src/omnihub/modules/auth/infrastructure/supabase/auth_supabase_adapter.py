@@ -24,10 +24,12 @@ class SupabaseAuthAdapter(AuthProviderPort):
     Authenticate user with email and password via Supabase.
     Translates native Supabase response into our clean, agnostic AuthSession domain object.
     """
-    auth_response = await self.client.auth.sign_in_with_password({
-      "email": email,
-      "password": password,
-    })
+    auth_response = await self.client.auth.sign_in_with_password(
+      {
+        "email": email,
+        "password": password,
+      }
+    )
 
     session = auth_response.session
     user = auth_response.user
@@ -41,7 +43,7 @@ class SupabaseAuthAdapter(AuthProviderPort):
       access_token=session.access_token,
       refresh_token=session.refresh_token,
       email=user.email,
-      expires_at=parse_timestamp(session.expires_at)
+      expires_at=parse_timestamp(session.expires_at),
     )
 
   async def create_user_with_credentials(self, email: str, password: str) -> AuthSession:
@@ -49,10 +51,12 @@ class SupabaseAuthAdapter(AuthProviderPort):
     Create a new user in Supabase with email and password.
     Returns an AuthSession for the newly created user.
     """
-    auth_response = await self.client.auth.sign_up({
-      "email": email,
-      "password": password,
-    })
+    auth_response = await self.client.auth.sign_up(
+      {
+        "email": email,
+        "password": password,
+      }
+    )
 
     session = auth_response.session
     user = auth_response.user
@@ -69,7 +73,7 @@ class SupabaseAuthAdapter(AuthProviderPort):
       access_token=session.access_token,
       refresh_token=session.refresh_token,
       email=user.email,
-      expires_at=parse_timestamp(session.expires_at)
+      expires_at=parse_timestamp(session.expires_at),
     )
 
   async def refresh_session(self, refresh_token: str) -> AuthSession:
@@ -91,7 +95,7 @@ class SupabaseAuthAdapter(AuthProviderPort):
       access_token=session.access_token,
       refresh_token=session.refresh_token,
       email=user.email,
-      expires_at=parse_timestamp(session.expires_at)
+      expires_at=parse_timestamp(session.expires_at),
     )
 
   async def validate_token_and_get_user_id(self, token: str) -> UUID:
@@ -111,4 +115,3 @@ class SupabaseAuthAdapter(AuthProviderPort):
       return UUID(str(user_id))
     except ValueError as error:
       raise AuthError("Invalid bearer token user identifier.") from error
-  

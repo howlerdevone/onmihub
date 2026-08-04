@@ -6,7 +6,7 @@ from omnihub.modules.auth.domain.entities import AuthSession
 
 class AuthProviderPort(ABC):
   """
-  Architectural Port defining strict capabilities required from any 
+  Architectural Port defining strict capabilities required from any
   external Identity Provider (IdP) like Supabase, Clerk, or Auth0.
   """
 

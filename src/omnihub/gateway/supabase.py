@@ -4,6 +4,7 @@ from supabase import AsyncClient, acreate_client
 # (e.g. in `omnihub.cli`) to keep this module focused solely on Supabase
 # client creation and to avoid side-effects during library import.
 
+
 async def get_supabase_client() -> AsyncClient:
   """
   Infrastructure factory utility to instantiate and retrieve the official
@@ -14,9 +15,9 @@ async def get_supabase_client() -> AsyncClient:
   supabase_key = os.environ.get("SUPABASE_KEY") or os.environ.get("SUPABASE_ANON_KEY")
 
   if not supabase_url or not supabase_key:
-      raise RuntimeError(
-          "CRITICAL INFRASTRUCTURE FAILURE: SUPABASE_URL and SUPABASE_KEY "
-          "must be properly set in your environment configuration parameters."
-      )
+    raise RuntimeError(
+      "CRITICAL INFRASTRUCTURE FAILURE: SUPABASE_URL and SUPABASE_KEY "
+      "must be properly set in your environment configuration parameters."
+    )
 
   return await acreate_client(supabase_url, supabase_key)

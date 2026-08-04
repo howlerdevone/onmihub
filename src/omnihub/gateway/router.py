@@ -6,15 +6,15 @@ from omnihub.modules.organizations.infrastructure.http.routes import router as o
 
 
 def get_central_application_router() -> APIRouter:
-    """
-    Aggregates and exposes all independent context routers from peripheral modules
-    into a unified main application router matrix.
-    """
-    main_router = APIRouter()
+  """
+  Aggregates and exposes all independent context routers from peripheral modules
+  into a unified main application router matrix.
+  """
+  main_router = APIRouter()
 
-    # Register peripheral modular blocks cleanly using the master switchboard
-    main_router.include_router(auth_router)
-    main_router.include_router(identity_router)
-    main_router.include_router(organizations_router)
-    
-    return main_router
+  # Register peripheral modular blocks cleanly using the master switchboard
+  main_router.include_router(auth_router)
+  main_router.include_router(identity_router)
+  main_router.include_router(organizations_router)
+
+  return main_router

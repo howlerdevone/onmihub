@@ -6,10 +6,10 @@ from pydantic import BaseModel, EmailStr
 
 
 class RegisterUserRequest(BaseModel):
-    email: EmailStr
-    workspace_name: str
+  email: EmailStr
+  workspace_name: str
 
 
 class RegisterUserResponse(BaseModel):
-    user_id: UUID
-    workspace_id: UUID
+  user_id: UUID
+  workspace_id: UUID
