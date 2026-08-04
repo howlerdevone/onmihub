@@ -4,7 +4,7 @@ from datetime import UTC, datetime
 from typing import Optional, Union
 
 
-def parse_timestamp(timestamp: Optional[Union[int, float, str]]) -> datetime:
+def parse_timestamp(timestamp: int | float | str | None) -> datetime:
     """Convert Unix timestamp or ISO format string to datetime.
 
     Args:

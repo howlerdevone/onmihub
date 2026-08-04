@@ -1,7 +1,3 @@
-from .http_error import (
- HttpError
-)
+from .http_error import HttpError
 
-__all__ = [
-  "HttpError"
-]
+__all__ = ["HttpError"]

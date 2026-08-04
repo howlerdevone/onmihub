@@ -5,18 +5,18 @@ from supabase import AsyncClient, acreate_client
 # client creation and to avoid side-effects during library import.
 
 async def get_supabase_client() -> AsyncClient:
-    """
-    Infrastructure factory utility to instantiate and retrieve the official 
-    Supabase client SDK using strict validated environment variables boundary.
-    """
-    supabase_url = os.environ.get("SUPABASE_URL")
-    # Support both SUPABASE_KEY and SUPABASE_ANON_KEY variable names
-    supabase_key = os.environ.get("SUPABASE_KEY") or os.environ.get("SUPABASE_ANON_KEY")
+  """
+  Infrastructure factory utility to instantiate and retrieve the official
+  Supabase client SDK using strict validated environment variables boundary.
+  """
+  supabase_url = os.environ.get("SUPABASE_URL")
+  # Support both SUPABASE_KEY and SUPABASE_ANON_KEY variable names
+  supabase_key = os.environ.get("SUPABASE_KEY") or os.environ.get("SUPABASE_ANON_KEY")
 
-    if not supabase_url or not supabase_key:
-        raise RuntimeError(
-            "CRITICAL INFRASTRUCTURE FAILURE: SUPABASE_URL and SUPABASE_KEY "
-            "must be properly set in your environment configuration parameters."
-        )
+  if not supabase_url or not supabase_key:
+      raise RuntimeError(
+          "CRITICAL INFRASTRUCTURE FAILURE: SUPABASE_URL and SUPABASE_KEY "
+          "must be properly set in your environment configuration parameters."
+      )
 
-    return await acreate_client(supabase_url, supabase_key)
+  return await acreate_client(supabase_url, supabase_key)

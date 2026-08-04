@@ -1,5 +1,9 @@
 # Justfile for omnihub
 
+# On Windows, run recipes with PowerShell so devs don't need Git Bash / sh.
+# macOS and Linux keep the default sh.
+set windows-shell := ["powershell.exe", "-NoLogo", "-Command"]
+
 
 # ------------------------------------------------------------------------------
 # INFRASTRUCTURE (Docker)
@@ -94,19 +98,34 @@ coverage:
     uv run --python=3.14 coverage report
     uv run --python=3.14 coverage html
 
-# Serve docs locally with live reload
+# Serve docs locally with live reload (macOS / Linux)
+[unix]
 docs-serve:
     -lsof -ti :8000 | xargs kill
+    uv run --group docs zensical serve
+
+# Serve docs locally with live reload (Windows)
+[windows]
+docs-serve:
+    -Get-NetTCPConnection -LocalPort 8000 -ErrorAction SilentlyContinue | ForEach-Object { Stop-Process -Id $_.OwningProcess -Force -ErrorAction SilentlyContinue }
     uv run --group docs zensical serve
 
 # Build docs (strict mode, fails on warnings)
 docs-build:
     uv run --group docs zensical build --clean
 
-# Build the project, useful for checking that packaging is correct
+# Build the project, useful for checking that packaging is correct (macOS / Linux)
+[unix]
 build:
     rm -rf build
     rm -rf dist
+    uv build
+
+# Build the project, useful for checking that packaging is correct (Windows)
+[windows]
+build:
+    if (Test-Path build) { Remove-Item -Recurse -Force build }
+    if (Test-Path dist)  { Remove-Item -Recurse -Force dist }
     uv build
 
 # Tag, push, and create a GitHub release
@@ -116,7 +135,8 @@ release:
 # Remove all build, test, coverage and Python artifacts
 clean: clean-build clean-pyc clean-test
 
-# Remove build artifacts
+# Remove build artifacts (macOS / Linux)
+[unix]
 clean-build:
 	rm -fr build/
 	rm -fr dist/
@@ -124,28 +144,59 @@ clean-build:
 	find . -name '*.egg-info' -exec rm -fr {} +
 	find . -name '*.egg' -exec rm -f {} +
 
-# Remove Python file artifacts
+# Remove build artifacts (Windows)
+[windows]
+clean-build:
+    if (Test-Path build) { Remove-Item -Recurse -Force build }
+    if (Test-Path dist)  { Remove-Item -Recurse -Force dist }
+    if (Test-Path .eggs) { Remove-Item -Recurse -Force .eggs }
+    Get-ChildItem -Path . -Recurse -Directory -Filter '*.egg-info' -ErrorAction SilentlyContinue | Remove-Item -Recurse -Force
+    Get-ChildItem -Path . -Recurse -File -Filter '*.egg' -ErrorAction SilentlyContinue | Remove-Item -Force
+
+# Remove Python file artifacts (macOS / Linux)
+[unix]
 clean-pyc:
 	find . -name '*.pyc' -exec rm -f {} +
 	find . -name '*.pyo' -exec rm -f {} +
 	find . -name '*~' -exec rm -f {} +
 	find . -name '__pycache__' -exec rm -fr {} +
 
-# Remove test and coverage artifacts
+# Remove Python file artifacts (Windows)
+[windows]
+clean-pyc:
+    Get-ChildItem -Path . -Recurse -File -Include '*.pyc','*.pyo','*~' -ErrorAction SilentlyContinue | Remove-Item -Force
+    Get-ChildItem -Path . -Recurse -Directory -Filter '__pycache__' -ErrorAction SilentlyContinue | Remove-Item -Recurse -Force
+
+# Remove test and coverage artifacts (macOS / Linux)
+[unix]
 clean-test:
 	rm -f .coverage
 	rm -f .coverage.*
 	rm -fr htmlcov/
 	rm -fr .pytest_cache
 
+# Remove test and coverage artifacts (Windows)
+[windows]
+clean-test:
+    Remove-Item -Force -ErrorAction SilentlyContinue .coverage
+    Get-ChildItem -Force -File -ErrorAction SilentlyContinue | Where-Object { $_.Name -like '.coverage.*' } | Remove-Item -Force
+    if (Test-Path htmlcov)       { Remove-Item -Recurse -Force htmlcov }
+    if (Test-Path .pytest_cache) { Remove-Item -Recurse -Force .pytest_cache }
+
 # Publish to PyPI (manual alternative to GitHub Actions)
 publish:
     uv build
     uv publish
 
-# Start the FastAPI development server with auto-reload
+# Start the FastAPI development server with auto-reload (macOS / Linux)
+[unix]
 dev:
     OMNIHUB_RELOAD=true uv run python -m omnihub
+
+# Start the FastAPI development server with auto-reload (Windows)
+[windows]
+dev:
+    $env:OMNIHUB_RELOAD="true"; uv run python -m omnihub
 
 # Start the Celery worker (change 'config' to your celery module name)
 worker:

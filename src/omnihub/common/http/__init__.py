@@ -1,7 +1,3 @@
-from .httpx_client import (
- HttpxClient
-)
+from .httpx_client import HttpxClient
 
-__all__ = [
-  "HttpxClient"
-]
+__all__ = ["HttpxClient"]
