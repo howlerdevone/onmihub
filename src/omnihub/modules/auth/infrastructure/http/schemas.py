@@ -1,8 +1,19 @@
 from __future__ import annotations
 
-from typing import Any
+from datetime import datetime
+from uuid import UUID
 
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel, ConfigDict, EmailStr
+
+
+class AuthUserResponse(BaseModel):
+  model_config = ConfigDict(from_attributes=True)
+
+  id: UUID
+  email: EmailStr
+  display_name: str | None = None
+  preferred_language: str | None = None
+  timezone: str | None = None
 
 class LoginRequest(BaseModel):
   """
@@ -19,8 +30,20 @@ class LoginResponse(BaseModel):
   """
   status: str
   access_token: str       
-  refresh_token: str      
-  user: dict[str, Any] | None = None  # Optional local multi-tenant profiling metadata
+  refresh_token: str
+  expires_at: datetime
+  user: AuthUserResponse | None = None
+
+
+class RefreshSessionRequest(BaseModel):
+  refresh_token: str
+
+
+class RefreshSessionResponse(BaseModel):
+  status: str
+  access_token: str
+  refresh_token: str
+  expires_at: datetime
 
 class RegistrationRequest(BaseModel):
   """
@@ -41,5 +64,6 @@ class RegistrationResponse(BaseModel):
   """
   status: str
   access_token: str       
-  refresh_token: str      
-  user: dict[str, Any] | None = None  # Optional local multi-tenant profiling metadata
+  refresh_token: str
+  expires_at: datetime
+  user: AuthUserResponse | None = None

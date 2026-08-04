@@ -1,10 +1,10 @@
 import os
-from supabase import create_client, Client
+from supabase import AsyncClient, acreate_client
 # Note: environment loading is intentionally performed at application startup
 # (e.g. in `omnihub.cli`) to keep this module focused solely on Supabase
 # client creation and to avoid side-effects during library import.
 
-def get_supabase_client() -> Client:
+async def get_supabase_client() -> AsyncClient:
     """
     Infrastructure factory utility to instantiate and retrieve the official 
     Supabase client SDK using strict validated environment variables boundary.
@@ -19,4 +19,4 @@ def get_supabase_client() -> Client:
             "must be properly set in your environment configuration parameters."
         )
 
-    return create_client(supabase_url, supabase_key)
+    return await acreate_client(supabase_url, supabase_key)

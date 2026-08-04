@@ -38,7 +38,7 @@ async def database_lifespan(app: FastAPI):
     pg_client.pool = app.state.db_pool
     app.state.db_client = pg_client
 
-    app.state.supabase_client = get_supabase_client()
+    app.state.supabase_client = await get_supabase_client()
 
     yield  # Application runs here while waiting for termination signals
 

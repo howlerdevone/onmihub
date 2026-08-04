@@ -2,7 +2,7 @@
 
 > Hexagonal, DDD-driven multi-tenant Agentic AI infrastructure orchestrator.
 
-Omnihub is a FastAPI backend built around **Hexagonal Architecture** and **Domain-Driven Design** principles. It provides a clean, provider-agnostic foundation for multi-tenant SaaS products with built-in auth, identity management, async database access, and a pluggable module system.
+Omnihub is a FastAPI backend built around Hexagonal Architecture and Domain-Driven Design. It provides provider-agnostic authentication boundaries, identity persistence, organization/workspace context, and async PostgreSQL integration.
 
 ---
 
@@ -19,7 +19,7 @@ Omnihub is a FastAPI backend built around **Hexagonal Architecture** and **Domai
 - [Debugging](#debugging)
 - [Development Workflow](#development-workflow)
 - [API Reference](#api-reference)
-- [Available `just` Commands](#available-just-commands)
+- [Available just Commands](#available-just-commands)
 
 ---
 
@@ -27,13 +27,13 @@ Omnihub is a FastAPI backend built around **Hexagonal Architecture** and **Domai
 
 ```
 ┌─────────────────────────────────────────────────────────┐
-│                     HTTP Layer (FastAPI)                 │
-│              routes.py / schemas.py / middleware         │
+│                     HTTP Layer (FastAPI)               │
+│              routes.py / schemas.py / middleware       │
 └────────────────────────┬────────────────────────────────┘
                          │
 ┌────────────────────────▼────────────────────────────────┐
 │               Application Services                      │
-│         auth/service.py · identity/service.py           │
+│     auth/service.py · identity/service.py · orgs       │
 └────────────────────────┬────────────────────────────────┘
                          │
 ┌────────────────────────▼────────────────────────────────┐
@@ -42,14 +42,14 @@ Omnihub is a FastAPI backend built around **Hexagonal Architecture** and **Domai
 └──────────────┬─────────────────────────┬────────────────┘
                │                         │
 ┌──────────────▼──────────┐  ┌───────────▼──────────────┐
-│   Supabase Adapter      │  │    Postgres Adapter       │
-│ auth_supabase_adapter   │  │  user_pg_adapter.py       │
+│   Auth Provider Adapter │  │      Postgres Adapter     │
+│   (Supabase today)      │  │  asyncpg-backed adapters  │
 └─────────────────────────┘  └──────────────────────────┘
 ```
 
-- **Ports & Adapters (Hexagonal)** — domain logic never imports infrastructure.
-- **DDD modules** — `auth` and `identity` are separate bounded contexts.
-- **Provider-agnostic** — swap Supabase for Clerk/Auth0 by replacing the adapter only.
+- Domain logic does not depend on framework or provider SDKs.
+- The auth guard depends on an injected auth provider port, not Supabase directly.
+- Swapping identity providers requires adapter/wiring changes, not HTTP guard changes.
 
 ---
 
@@ -58,16 +58,15 @@ Omnihub is a FastAPI backend built around **Hexagonal Architecture** and **Domai
 | Layer | Technology |
 |---|---|
 | API Framework | FastAPI |
-| ASGI Server | Uvicorn (with uvloop) |
-| Auth Provider | Supabase |
-| Database | PostgreSQL 16 (asyncpg) |
-| Cache / Queue | Redis 7 |
-| Task Queue | Celery |
+| ASGI Server | Uvicorn |
+| Auth Provider (current) | Supabase |
+| Database | PostgreSQL + asyncpg |
+| Cache / Queue | Redis |
 | Migrations | dbmate |
 | Package Manager | uv |
 | Linting | Ruff |
-| Type Checking | ty (Pylance) |
-| Testing | pytest / coverage |
+| Type Checking | ty |
+| Testing | pytest |
 
 ---
 
@@ -75,36 +74,45 @@ Omnihub is a FastAPI backend built around **Hexagonal Architecture** and **Domai
 
 ```
 src/omnihub/
-├── cli.py                        # App factory + uvicorn entrypoint
-├── __main__.py                   # python -m omnihub entrypoint
-├── config/
-│   └── dotenv.py                 # Minimal .env loader
+├── cli.py                                  # App factory + uvicorn entrypoint
+├── __main__.py                             # python -m omnihub entrypoint
 ├── common/
-│   ├── db/pg_client.py           # asyncpg PgClient wrapper
-│   ├── http/httpx_client.py      # HTTPX client wrapper
-│   ├── exceptions/http_error.py  # Shared HTTP exceptions
-│   ├── logging.py                # Structured logging setup
-│   └── time.py                   # Timestamp parsing utility
+│   ├── db/pg_client.py                     # PgClient wrapper
+│   ├── http/httpx_client.py                # Shared HTTPX client wrapper
+│   ├── logging.py                          # Logging setup
+│   └── time.py                             # Timestamp parser utility
+├── config/
+│   └── dotenv.py                           # .env loader
 ├── gateway/
-│   ├── database.py               # DB lifespan + request middleware
-│   ├── supabase.py               # Supabase client factory
-│   └── router.py                 # Central router aggregator
+│   ├── database.py                         # DB lifespan + middleware
+│   ├── supabase.py                         # Supabase client factory
+│   └── router.py                           # Central router aggregator
 └── modules/
-    ├── auth/                     # Authentication bounded context
-    │   ├── domain/               # Entities, exceptions
-    │   ├── application/          # AuthApplicationService
-    │   ├── ports/                # AuthProviderPort (ABC)
+    ├── auth/
+    │   ├── application/service.py
+    │   ├── dependencies/
+    │   │   ├── auth_guard.py               # get_current_user_token/get_authenticated_user_id
+    │   │   └── auth_provider_dependency.py # provider + auth service factories
+    │   ├── domain/
     │   ├── infrastructure/
-    │   │   ├── http/             # Routes, schemas
-    │   │   └── supabase/         # SupabaseAuthAdapter
-    │   └── dependencies/         # FastAPI dependency factories
-    └── identity/                 # Identity bounded context
-        ├── domain/               # User entity, exceptions
-        ├── application/          # IdentityApplicationService
-        ├── ports/                # UserIdentityProviderPort (ABC)
-        └── infrastructure/
-            ├── database/         # UserPgIdentityAdapter
-            └── http/             # Routes, schemas
+    │   │   ├── http/
+    │   │   └── supabase/
+    │   └── ports/auth_provider_port.py
+    ├── identity/
+    │   ├── application/
+    │   ├── domain/
+    │   ├── infrastructure/
+    │   │   ├── database/
+    │   │   └── http/
+    │   └── ports/
+    └── organizations/
+        ├── application/
+        ├── dependencies/
+        ├── domain/
+        ├── infrastructure/
+        │   ├── database/
+        │   └── http/
+        └── ports/
 ```
 
 ---
@@ -113,18 +121,20 @@ src/omnihub/
 
 | Tool | Version |
 |---|---|
-| Python | ≥ 3.12 |
+| Python | >= 3.12 |
 | uv | latest |
 | Docker + Docker Compose | any recent |
 | just | latest |
 | dbmate | latest |
 
-Install `just`:
+Install just:
+
 ```bash
 brew install just
 ```
 
-Install `dbmate`:
+Install dbmate:
+
 ```bash
 brew install dbmate
 ```
@@ -133,7 +143,7 @@ brew install dbmate
 
 ## Environment Variables
 
-Create a `.env` file at the project root:
+Create a .env file at the project root (or copy from .env.example):
 
 ```env
 # Supabase
@@ -149,86 +159,80 @@ PORT=8000
 OMNIHUB_RELOAD=true
 ```
 
-> `SUPABASE_URL` and `SUPABASE_ANON_KEY` are required. The server will fail to start without them.
+SUPABASE_URL and SUPABASE_ANON_KEY are required for auth-enabled startup.
 
 ---
 
 ## Getting Started
 
 ```bash
-# 1. Clone the repo
+# 1. Clone the repository
 git clone https://github.com/howlerdevone/onmihub.git
 cd omnihub
 
 # 2. Install dependencies
 uv sync
 
-# 3. Copy and fill environment variables
-cp .env.example .env  # edit with your Supabase credentials
+# 3. Configure environment
+cp .env.example .env
 
-# 4. Start Docker services (Postgres + Redis)
+# 4. Start infra (Postgres + Redis)
 just docker-up
 
-# 5. Run database migrations
+# 5. Run migrations
 just db-up
 
-# 6. Start the dev server
+# 6. Start the app
 just dev
 ```
 
-The API will be available at http://127.0.0.1:8000  
-Interactive docs at http://127.0.0.1:8000/docs
+API: http://127.0.0.1:8000
+Docs: http://127.0.0.1:8000/docs
 
 ---
 
 ## Database Migrations
 
-Omnihub uses [dbmate](https://github.com/amacneil/dbmate) for schema migrations.
-
 ```bash
-# Apply all pending migrations
+# Apply pending migrations
 just db-up
 
-# Create a new migration
-just db-new create_your_table_name
+# Create migration
+just db-new create_some_table
 
-# Roll back the last migration
+# Roll back one migration
 just db-rollback
 
-# Show migration status
+# Status
 just db-status
 ```
 
-Migration files live in `db/migrations/`. The current schema snapshot is in `db/schema.sql`.
+Migrations live in db/migrations and schema snapshot is in db/schema.sql.
 
 ---
 
 ## Running the Server
 
-**Development (with auto-reload):**
+Development:
+
 ```bash
 just dev
-# or
+# equivalent:
 OMNIHUB_RELOAD=true uv run python -m omnihub
 ```
 
-**Production:**
+Production example:
+
 ```bash
 uv run uvicorn omnihub.cli:application --host 0.0.0.0 --port 8000 --workers 4
-```
-
-**Via entry point (after install):**
-```bash
-uv run omnihub
 ```
 
 ---
 
 ## Debugging
 
-Open VS Code and press `F5` — the included launch config `Python: FastAPI` starts the server via `python -m omnihub` with debugpy attached and auto-reload enabled.
+Use VS Code launch config with python -m omnihub, or run manually:
 
-You can also attach to a running server manually:
 ```bash
 uv run python -m debugpy --listen 0.0.0.0:5678 --wait-for-client -m omnihub
 ```
@@ -238,19 +242,10 @@ uv run python -m debugpy --listen 0.0.0.0:5678 --wait-for-client -m omnihub
 ## Development Workflow
 
 ```bash
-# Format + lint + type-check + test in one shot
 just qa
-
-# Type-check only
 just type-check
-
-# Run tests
 just test
-
-# Run tests with coverage
 just coverage
-
-# Run tests in debugger on failure
 just pdb
 ```
 
@@ -258,15 +253,16 @@ just pdb
 
 ## API Reference
 
-### Auth — `/v1/auth`
+### Auth — /v1/auth
 
 | Method | Path | Description |
 |---|---|---|
-| `GET` | `/v1/auth/health` | Health check |
-| `POST` | `/v1/auth/register` | Register new user |
-| `POST` | `/v1/auth/login` | Login existing user |
+| GET | /v1/auth/health | Health check |
+| POST | /v1/auth/register | Register user |
+| POST | /v1/auth/login | Login user |
 
-**Register** `POST /v1/auth/register`
+Register body:
+
 ```json
 {
   "email": "user@example.com",
@@ -278,7 +274,8 @@ just pdb
 }
 ```
 
-**Login** `POST /v1/auth/login`
+Login body:
+
 ```json
 {
   "email": "user@example.com",
@@ -286,24 +283,42 @@ just pdb
 }
 ```
 
-**Error Codes**
-
-| HTTP | Code | Meaning |
-|---|---|---|
-| 401 | `AUTH_INVALID_CREDENTIALS` | Wrong email or password |
-| 409 | `AUTH_USER_ALREADY_EXISTS` | Email already registered |
-| 400 | `AUTH_ERROR` | Auth request could not be processed |
-| 500 | `SYSTEM_ERROR` | Unexpected server error |
-
-### Identity — `/identity`
+### Identity — /identity
 
 | Method | Path | Description |
 |---|---|---|
-| `GET` | `/identity/health` | Health check |
+| GET | /identity/health | Health check |
+
+### Organizations — /v1/organizations
+
+Private endpoints using Bearer token.
+
+| Method | Path | Description |
+|---|---|---|
+| POST | /v1/organizations | Create workspace for current user |
+| GET | /v1/organizations/{workspace_id} | Get workspace context for current user |
+
+Create workspace body:
+
+```json
+{
+  "name": "Acme Workspace",
+  "slug": "acme-workspace"
+}
+```
+
+Common organization error codes:
+
+| HTTP | Code | Meaning |
+|---|---|---|
+| 401 | AUTH_INVALID_TOKEN | Missing/invalid bearer token |
+| 403 | ORG_ACCESS_DENIED | User has no access |
+| 404 | ORG_NOT_FOUND | Workspace not found |
+| 409 | ORG_ALREADY_EXISTS | Slug already exists |
 
 ---
 
-## Available `just` Commands
+## Available just Commands
 
 ```bash
 just list
@@ -311,24 +326,24 @@ just list
 
 | Command | Description |
 |---|---|
-| `just dev` | Start dev server with auto-reload |
-| `just docker-up` | Start Postgres + Redis in background |
-| `just docker-down` | Stop Docker services |
-| `just docker-destroy` | Stop and remove volumes |
-| `just db-up` | Apply all migrations |
-| `just db-new NAME` | Create a new migration |
-| `just db-rollback` | Roll back last migration |
-| `just db-status` | Show migration status |
-| `just qa` | Format + lint + type-check + test |
-| `just test` | Run pytest |
-| `just coverage` | Run tests with coverage report |
-| `just type-check` | Run ty type checker |
-| `just build` | Build distribution packages |
-| `just clean` | Remove build/test artifacts |
-| `just docs-serve` | Serve docs locally |
+| just dev | Start dev server with reload |
+| just docker-up | Start Docker services |
+| just docker-down | Stop Docker services |
+| just docker-destroy | Stop and remove volumes |
+| just db-up | Apply migrations |
+| just db-new NAME | Create migration |
+| just db-rollback | Roll back last migration |
+| just db-status | Show migration status |
+| just qa | Format, lint, type-check, test |
+| just test | Run pytest |
+| just coverage | Run coverage flow |
+| just type-check | Run ty |
+| just build | Build package |
+| just clean | Remove artifacts |
+| just docs-serve | Serve docs |
 
 ---
 
 ## License
 
-MIT — see [LICENSE](LICENSE).
+MIT — see LICENSE.

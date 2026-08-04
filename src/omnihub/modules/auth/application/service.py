@@ -1,5 +1,5 @@
 from omnihub.modules.auth.domain.entities import AuthSession
-from omnihub.modules.auth.infrastructure.http.schemas import RegistrationRequest
+from omnihub.modules.auth.infrastructure.http.mappers import RegistrationInput, map_login_user, map_registration_user
 from omnihub.modules.auth.ports.auth_provider_port import AuthProviderPort
 from omnihub.modules.identity.application.service import IdentityApplicationService
 from omnihub.modules.identity.domain.entities import User
@@ -26,20 +26,16 @@ class AuthApplicationService:
     user = await self.identity_service.get_user_by_email(email)
     
     if not user and auth_session:
-      # Atomically provision local tables and default Tenant Workspace container boundaries
-      user = await self.identity_service.create_user(User(
-        id=auth_session.user_id,
-        email=email,
-        refresh_token=auth_session.refresh_token,
-        access_token=auth_session.access_token,
-        display_name=None,
-        preferred_language=None,
-        timezone=None
-      ))
+      user = await self.identity_service.create_user(
+        map_login_user(
+          user_id=auth_session.user_id,
+          email=email,
+        )
+      )
         
     return auth_session, user
 
-  async def execute_registration_flow(self, data: RegistrationRequest) -> tuple[AuthSession, User | None]:
+  async def execute_registration_flow(self, data: RegistrationInput) -> tuple[AuthSession, User | None]:
     """
     Orchestrates user registration via the abstract provider port 
     and synchronizes multi-tenant database state boundaries.
@@ -49,14 +45,15 @@ class AuthApplicationService:
     user = None
 
     if auth_session:
-      user = await self.identity_service.create_user(User(
-        id=auth_session.user_id,
-        email=data.email,
-        refresh_token=auth_session.refresh_token,
-        access_token=auth_session.access_token,
-        display_name=data.display_name,
-        preferred_language=data.preferred_language,
-        timezone=data.timezone
-      ))
+      user = await self.identity_service.create_user(
+        map_registration_user(
+          user_id=auth_session.user_id,
+          data=data,
+        )
+      )
     
     return auth_session, user
+
+  async def execute_refresh_flow(self, refresh_token: str) -> AuthSession:
+    """Refresh an authenticated session."""
+    return await self.auth_provider.refresh_session(refresh_token)

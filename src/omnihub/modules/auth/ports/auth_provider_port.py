@@ -1,4 +1,6 @@
 from abc import ABC, abstractmethod
+from uuid import UUID
+
 from omnihub.modules.auth.domain.entities import AuthSession
 
 
@@ -16,4 +18,14 @@ class AuthProviderPort(ABC):
   @abstractmethod
   async def create_user_with_credentials(self, email: str, password: str) -> AuthSession:
     """Create a new user in the remote Identity Provider with email and password."""
+    pass
+
+  @abstractmethod
+  async def refresh_session(self, refresh_token: str) -> AuthSession:
+    """Exchange a refresh token for a new authenticated session."""
+    pass
+
+  @abstractmethod
+  async def validate_token_and_get_user_id(self, token: str) -> UUID:
+    """Validate an access token and return the authenticated user id."""
     pass

@@ -427,7 +427,8 @@ CREATE TABLE organizations.workspaces (
     slug character varying(120) NOT NULL,
     is_active boolean DEFAULT true NOT NULL,
     created_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
-    updated_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL
+    updated_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    created_by uuid
 );
 
 
@@ -819,6 +820,13 @@ CREATE INDEX idx_organizations_memberships_workspace ON organizations.membership
 
 
 --
+-- Name: idx_organizations_workspaces_created_by; Type: INDEX; Schema: organizations; Owner: -
+--
+
+CREATE INDEX idx_organizations_workspaces_created_by ON organizations.workspaces USING btree (created_by);
+
+
+--
 -- Name: idx_storage_files_owner; Type: INDEX; Schema: storage; Owner: -
 --
 
@@ -944,6 +952,14 @@ ALTER TABLE ONLY jobs.background_tasks
 
 
 --
+-- Name: workspaces fk_organizations_workspaces_created_by; Type: FK CONSTRAINT; Schema: organizations; Owner: -
+--
+
+ALTER TABLE ONLY organizations.workspaces
+    ADD CONSTRAINT fk_organizations_workspaces_created_by FOREIGN KEY (created_by) REFERENCES auth.users(id) ON DELETE SET NULL;
+
+
+--
 -- Name: memberships memberships_user_id_fkey; Type: FK CONSTRAINT; Schema: organizations; Owner: -
 --
 
@@ -1003,4 +1019,5 @@ INSERT INTO public.schema_migrations (version) VALUES
     ('20260731205049'),
     ('20260731205306'),
     ('20260731210918'),
-    ('20260731211312');
+    ('20260731211312'),
+    ('20260803123000');

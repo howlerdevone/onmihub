@@ -8,9 +8,11 @@ from .http import (
 from .db import (
   PgClient
 )
+from .text import slugify
 
 __all__ = [
   "HttpError",
   "HttpxClient",
-  "PgClient"
+  "PgClient",
+  "slugify",
 ]

@@ -1,6 +1,6 @@
 """Utilities for handling timestamp conversions and parsing."""
 
-from datetime import datetime
+from datetime import UTC, datetime
 from typing import Optional, Union
 
 
@@ -19,7 +19,9 @@ def parse_timestamp(timestamp: Optional[Union[int, float, str]]) -> datetime:
     if timestamp is None:
         raise ValueError("Timestamp cannot be None")
     if isinstance(timestamp, (int, float)):
-        return datetime.fromtimestamp(timestamp)
-    else:
-        # At this point, type system narrows to str
-        return datetime.fromisoformat(timestamp)
+        return datetime.fromtimestamp(timestamp, UTC)
+
+    parsed = datetime.fromisoformat(timestamp.replace("Z", "+00:00"))
+    if parsed.tzinfo is None:
+        return parsed.replace(tzinfo=UTC)
+    return parsed.astimezone(UTC)
