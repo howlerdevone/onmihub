@@ -4,6 +4,12 @@
 # macOS and Linux keep the default sh.
 set windows-shell := ["powershell.exe", "-NoLogo", "-Command"]
 
+# Enable doppler-env auto-injection for every Python process launched by this
+# justfile. The doppler-env .pth hook is a no-op unless DOPPLER_ENV is set, so
+# this line is what wires our commands to Doppler. Non-Python tools (dbmate)
+# are still wrapped explicitly with `doppler run --` below.
+export DOPPLER_ENV := "1"
+
 
 # ------------------------------------------------------------------------------
 # INFRASTRUCTURE (Docker)
@@ -33,15 +39,15 @@ db-new NAME:
 db-up: docker-up
     @echo "Waiting for Postgres to respond..."
     @sleep 2
-    dbmate up
+    doppler run -- dbmate up
 
 # Roll back the last applied migration
 db-rollback:
-    dbmate rollback
+    doppler run -- dbmate rollback
 
 # Show the current migrations status
 db-status:
-    dbmate status
+    doppler run -- dbmate status
 
 # Show available commands
 list:

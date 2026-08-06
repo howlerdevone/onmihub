@@ -429,6 +429,19 @@ wheels = [
 ]
 
 [[package]]
+name = "doppler-env"
+version = "0.3.1"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "pip" },
+    { name = "python-dotenv" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/8f/8b/38b4f570db3a1c68f84565078991fca249ffa878968e653e34e5442660a0/doppler_env-0.3.1.tar.gz", hash = "sha256:d187c2cf6a0dec677c00af502d59b382d507d69cd9805ea9e8211860bd0aa0f7", size = 4368, upload-time = "2022-12-08T23:51:49.164Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/76/6b/46293737fd8c854f34f099529e2606b366176cdcdee119e1474e47e367c2/doppler_env-0.3.1-py3-none-any.whl", hash = "sha256:4c80437f875c7bb85c980e7a3bf96fff594d1e1b05b99b49b02e673fbaa2d65c", size = 4375, upload-time = "2022-12-08T23:51:47.433Z" },
+]
+
+[[package]]
 name = "email-validator"
 version = "2.3.0"
 source = { registry = "https://pypi.org/simple" }
@@ -993,6 +1006,7 @@ dependencies = [
 dev = [
     { name = "asyncpg-stubs" },
     { name = "coverage" },
+    { name = "doppler-env" },
     { name = "pytest" },
     { name = "ruff" },
     { name = "ty" },
@@ -1031,6 +1045,7 @@ requires-dist = [
 dev = [
     { name = "asyncpg-stubs", specifier = ">=0.31.3" },
     { name = "coverage" },
+    { name = "doppler-env", specifier = ">=0.3.1" },
     { name = "pytest" },
     { name = "ruff" },
     { name = "ty" },
@@ -1062,6 +1077,15 @@ source = { registry = "https://pypi.org/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/5a/82/42f767fc1c1143d6fd36efb827202a2d997a375e160a71eb2888a925aac1/pathspec-1.1.1.tar.gz", hash = "sha256:17db5ecd524104a120e173814c90367a96a98d07c45b2e10c2f3919fff91bf5a", size = 135180, upload-time = "2026-04-27T01:46:08.907Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/f1/d9/7fb5aa316bc299258e68c73ba3bddbc499654a07f151cba08f6153988714/pathspec-1.1.1-py3-none-any.whl", hash = "sha256:a00ce642f577bf7f473932318056212bc4f8bfdf53128c78bbd5af0b9b20b189", size = 57328, upload-time = "2026-04-27T01:46:07.06Z" },
+]
+
+[[package]]
+name = "pip"
+version = "26.2"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/db/96/e6f8e9d9d7b9cc4457092712a7e919c3186aa2c2fa9ffed2c5d29cc947e8/pip-26.2.tar.gz", hash = "sha256:2d8542afcc84cdd8e846c2b36b2861fad1da376dd98f8e7113e9108a3c331690", size = 1848845, upload-time = "2026-07-29T21:57:56.407Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/62/36/a3aed958d60531cb442b7ab4596cda7b3621cfb916f8ae1d6769795c7dc1/pip-26.2-py3-none-any.whl", hash = "sha256:931c303696af6fa3417112103b1cad26890e5a07eccb5b99783700e33f2b8aad", size = 1816475, upload-time = "2026-07-29T21:57:54.763Z" },
 ]
 
 [[package]]

@@ -5,7 +5,13 @@ from pathlib import Path
 def load_dotenv_if_present(env_path: Path | None = None) -> None:
   """Load a .env file into os.environ if present.
 
-  - Only sets keys that are not already defined in the environment.
+  Fallback for local development when Doppler is not being used. In normal
+  usage the `doppler-env` package (installed as a dev dep) runs a `.pth`
+  hook at interpreter startup and, when DOPPLER_ENV=1 is set, populates
+  os.environ from Doppler before this loader runs.
+
+  - Only sets keys that are not already defined in the environment,
+    so Doppler-injected values always win over `.env`.
   - Keeps implementation dependency-free (no python-dotenv required).
   - `env_path` defaults to project root `.env` (cwd / ".env").
   """
