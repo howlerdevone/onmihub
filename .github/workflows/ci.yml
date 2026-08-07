@@ -138,6 +138,24 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
+          fetch-depth: 0
+
+      - name: Detect migration changes
+        id: mig
+        env:
+          BEFORE_SHA: ${{ github.event.before }}
+          AFTER_SHA: ${{ github.sha }}
+        run: |
+          if [ -z "$BEFORE_SHA" ] || [ "$BEFORE_SHA" = "0000000000000000000000000000000000000000" ]; then
+            echo "No previous SHA (initial push or manual dispatch); running migrations."
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          elif git diff --name-only "$BEFORE_SHA" "$AFTER_SHA" -- db/migrations/ | grep -q .; then
+            echo "Migration file changes detected; running migrations."
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "No migration changes; skipping migration steps."
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+          fi
 
       - name: Compute image tags
         id: img
@@ -185,12 +203,14 @@ jobs:
           cache-to: type=gha,mode=max
 
       - name: Install dbmate
+        if: steps.mig.outputs.changed == 'true'
         run: |
           curl -fsSL -o /usr/local/bin/dbmate \
             "https://github.com/amacneil/dbmate/releases/download/${DBMATE_VERSION}/dbmate-linux-amd64"
           chmod +x /usr/local/bin/dbmate
 
       - name: Debug DATABASE_URL_DIRECT presence
+        if: steps.mig.outputs.changed == 'true'
         env:
           URL: ${{ secrets.DATABASE_URL_DIRECT }}
         run: |
@@ -203,6 +223,7 @@ jobs:
           echo "OK — length=${#URL}, prefix=${URL:0:12}"
 
       - name: Run database migrations
+        if: steps.mig.outputs.changed == 'true'
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL_DIRECT }}
         run: dbmate --no-dump-schema up
