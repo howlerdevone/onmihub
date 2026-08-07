@@ -10,6 +10,7 @@ from fastapi.responses import Response
 from omnihub.common.db.pg_client import PgClient
 from omnihub.gateway.supabase import get_supabase_client
 
+
 logger = logging.getLogger(__name__)
 
 # Extract database credentials or fallback to local Docker composition settings on port 5433

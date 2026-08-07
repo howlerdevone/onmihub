@@ -1,5 +1,8 @@
-from fastapi import APIRouter, HTTPException, status, Depends
+from fastapi import APIRouter, Depends, HTTPException, status
+
 from omnihub.modules.auth.application.service import AuthApplicationService
+from omnihub.modules.auth.dependencies.auth_provider_dependency import get_auth_service
+from omnihub.modules.auth.domain.exceptions import AuthError, InvalidCredentialsError, UserAlreadyExistsError
 from omnihub.modules.auth.infrastructure.http.mappers import map_registration_request
 from omnihub.modules.auth.infrastructure.http.schemas import (
   AuthUserResponse,
@@ -10,8 +13,7 @@ from omnihub.modules.auth.infrastructure.http.schemas import (
   RegistrationRequest,
   RegistrationResponse,
 )
-from omnihub.modules.auth.dependencies.auth_provider_dependency import get_auth_service
-from omnihub.modules.auth.domain.exceptions import AuthError, InvalidCredentialsError, UserAlreadyExistsError
+
 
 router = APIRouter(prefix="/v1/auth", tags=["Authentication Operations"])
 

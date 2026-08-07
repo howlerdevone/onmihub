@@ -8,6 +8,7 @@ from .common.logging import setup_logging
 from .gateway.database import database_lifespan, inject_db_connection_middleware
 from .gateway.router import get_central_application_router
 
+
 # Initialize logging for the application
 setup_logging()
 

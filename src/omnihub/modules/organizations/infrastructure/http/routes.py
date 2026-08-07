@@ -18,6 +18,7 @@ from omnihub.modules.organizations.infrastructure.http.schemas import (
   WorkspaceResponse,
 )
 
+
 router = APIRouter(prefix="/v1/organizations", tags=["Organization Operations"])
 
 

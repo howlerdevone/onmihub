@@ -1,7 +1,6 @@
 """Utilities for handling timestamp conversions and parsing."""
 
 from datetime import UTC, datetime
-from typing import Optional, Union
 
 
 def parse_timestamp(timestamp: int | float | str | None) -> datetime:

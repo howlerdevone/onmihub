@@ -9,6 +9,7 @@ from omnihub.modules.auth.dependencies.auth_provider_dependency import get_auth_
 from omnihub.modules.auth.domain.exceptions import AuthError
 from omnihub.modules.auth.ports.auth_provider_port import AuthProviderPort
 
+
 bearer_scheme = HTTPBearer(auto_error=True)
 
 

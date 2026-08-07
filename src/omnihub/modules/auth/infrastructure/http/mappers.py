@@ -3,8 +3,8 @@ from __future__ import annotations
 from dataclasses import dataclass
 from uuid import UUID
 
-from omnihub.modules.identity.domain.entities import User
 from omnihub.modules.auth.infrastructure.http.schemas import RegistrationRequest
+from omnihub.modules.identity.domain.entities import User
 
 
 @dataclass(frozen=True)
