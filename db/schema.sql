@@ -26,7 +26,7 @@ CREATE SCHEMA audit;
 -- Name: auth; Type: SCHEMA; Schema: -; Owner: -
 --
 
-CREATE SCHEMA auth;
+CREATE SCHEMA identity;
 
 
 --
@@ -75,7 +75,7 @@ CREATE SCHEMA organizations;
 -- Name: storage; Type: SCHEMA; Schema: -; Owner: -
 --
 
-CREATE SCHEMA storage;
+CREATE SCHEMA assets;
 
 
 --
@@ -94,7 +94,7 @@ CREATE TYPE audit.log_level_enum AS ENUM (
 -- Name: provider_enum; Type: TYPE; Schema: auth; Owner: -
 --
 
-CREATE TYPE auth.provider_enum AS ENUM (
+CREATE TYPE identity.provider_enum AS ENUM (
     'local',
     'google',
     'github',
@@ -162,7 +162,7 @@ CREATE TYPE organizations.workspace_role_enum AS ENUM (
 -- Name: file_status_enum; Type: TYPE; Schema: storage; Owner: -
 --
 
-CREATE TYPE storage.file_status_enum AS ENUM (
+CREATE TYPE assets.file_status_enum AS ENUM (
     'pending',
     'processing',
     'ready',
@@ -210,10 +210,10 @@ CREATE TABLE audit.system_errors (
 -- Name: accounts; Type: TABLE; Schema: auth; Owner: -
 --
 
-CREATE TABLE auth.accounts (
+CREATE TABLE identity.accounts (
     id uuid DEFAULT gen_random_uuid() NOT NULL,
     user_id uuid NOT NULL,
-    provider auth.provider_enum NOT NULL,
+    provider identity.provider_enum NOT NULL,
     provider_user_id character varying(255) NOT NULL,
     access_token text,
     refresh_token text,
@@ -228,7 +228,7 @@ CREATE TABLE auth.accounts (
 -- Name: users; Type: TABLE; Schema: auth; Owner: -
 --
 
-CREATE TABLE auth.users (
+CREATE TABLE identity.users (
     id uuid DEFAULT gen_random_uuid() NOT NULL,
     email text,
     display_name text,
@@ -445,7 +445,7 @@ CREATE TABLE public.schema_migrations (
 -- Name: files; Type: TABLE; Schema: storage; Owner: -
 --
 
-CREATE TABLE storage.files (
+CREATE TABLE assets.files (
     id uuid DEFAULT gen_random_uuid() NOT NULL,
     owner_id uuid NOT NULL,
     parent_id uuid,
@@ -454,7 +454,7 @@ CREATE TABLE storage.files (
     storage_path text,
     mime_type character varying(100),
     size_bytes bigint DEFAULT 0,
-    status storage.file_status_enum DEFAULT 'pending'::storage.file_status_enum NOT NULL,
+    status assets.file_status_enum DEFAULT 'pending'::assets.file_status_enum NOT NULL,
     created_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
     updated_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL
 );
@@ -480,7 +480,7 @@ ALTER TABLE ONLY audit.system_errors
 -- Name: accounts accounts_pkey; Type: CONSTRAINT; Schema: auth; Owner: -
 --
 
-ALTER TABLE ONLY auth.accounts
+ALTER TABLE ONLY identity.accounts
     ADD CONSTRAINT accounts_pkey PRIMARY KEY (id);
 
 
@@ -488,7 +488,7 @@ ALTER TABLE ONLY auth.accounts
 -- Name: accounts unique_provider_identity; Type: CONSTRAINT; Schema: auth; Owner: -
 --
 
-ALTER TABLE ONLY auth.accounts
+ALTER TABLE ONLY identity.accounts
     ADD CONSTRAINT unique_provider_identity UNIQUE (provider, provider_user_id);
 
 
@@ -496,7 +496,7 @@ ALTER TABLE ONLY auth.accounts
 -- Name: accounts unique_user_provider; Type: CONSTRAINT; Schema: auth; Owner: -
 --
 
-ALTER TABLE ONLY auth.accounts
+ALTER TABLE ONLY identity.accounts
     ADD CONSTRAINT unique_user_provider UNIQUE (user_id, provider);
 
 
@@ -504,7 +504,7 @@ ALTER TABLE ONLY auth.accounts
 -- Name: users users_pkey; Type: CONSTRAINT; Schema: auth; Owner: -
 --
 
-ALTER TABLE ONLY auth.users
+ALTER TABLE ONLY identity.users
     ADD CONSTRAINT users_pkey PRIMARY KEY (id);
 
 
@@ -688,7 +688,7 @@ ALTER TABLE ONLY public.schema_migrations
 -- Name: files files_pkey; Type: CONSTRAINT; Schema: storage; Owner: -
 --
 
-ALTER TABLE ONLY storage.files
+ALTER TABLE ONLY assets.files
     ADD CONSTRAINT files_pkey PRIMARY KEY (id);
 
 
@@ -696,7 +696,7 @@ ALTER TABLE ONLY storage.files
 -- Name: files unique_filename_per_folder; Type: CONSTRAINT; Schema: storage; Owner: -
 --
 
-ALTER TABLE ONLY storage.files
+ALTER TABLE ONLY assets.files
     ADD CONSTRAINT unique_filename_per_folder UNIQUE (owner_id, parent_id, name, is_folder);
 
 
@@ -729,24 +729,24 @@ CREATE INDEX idx_audit_system_errors_user ON audit.system_errors USING btree (us
 
 
 --
--- Name: idx_auth_accounts_lookup; Type: INDEX; Schema: auth; Owner: -
+-- Name: idx_identity_accounts_lookup; Type: INDEX; Schema: auth; Owner: -
 --
 
-CREATE INDEX idx_auth_accounts_lookup ON auth.accounts USING btree (provider, provider_user_id);
-
-
---
--- Name: idx_auth_accounts_user_id; Type: INDEX; Schema: auth; Owner: -
---
-
-CREATE INDEX idx_auth_accounts_user_id ON auth.accounts USING btree (user_id);
+CREATE INDEX idx_identity_accounts_lookup ON identity.accounts USING btree (provider, provider_user_id);
 
 
 --
--- Name: idx_auth_users_email; Type: INDEX; Schema: auth; Owner: -
+-- Name: idx_identity_accounts_user_id; Type: INDEX; Schema: auth; Owner: -
 --
 
-CREATE INDEX idx_auth_users_email ON auth.users USING btree (email);
+CREATE INDEX idx_identity_accounts_user_id ON identity.accounts USING btree (user_id);
+
+
+--
+-- Name: idx_identity_users_email; Type: INDEX; Schema: auth; Owner: -
+--
+
+CREATE INDEX idx_identity_users_email ON identity.users USING btree (email);
 
 
 --
@@ -827,24 +827,24 @@ CREATE INDEX idx_organizations_workspaces_created_by ON organizations.workspaces
 
 
 --
--- Name: idx_storage_files_owner; Type: INDEX; Schema: storage; Owner: -
+-- Name: idx_assets_files_owner; Type: INDEX; Schema: storage; Owner: -
 --
 
-CREATE INDEX idx_storage_files_owner ON storage.files USING btree (owner_id);
-
-
---
--- Name: idx_storage_files_parent; Type: INDEX; Schema: storage; Owner: -
---
-
-CREATE INDEX idx_storage_files_parent ON storage.files USING btree (parent_id);
+CREATE INDEX idx_assets_files_owner ON assets.files USING btree (owner_id);
 
 
 --
--- Name: idx_storage_files_status; Type: INDEX; Schema: storage; Owner: -
+-- Name: idx_assets_files_parent; Type: INDEX; Schema: storage; Owner: -
 --
 
-CREATE INDEX idx_storage_files_status ON storage.files USING btree (status);
+CREATE INDEX idx_assets_files_parent ON assets.files USING btree (parent_id);
+
+
+--
+-- Name: idx_assets_files_status; Type: INDEX; Schema: storage; Owner: -
+--
+
+CREATE INDEX idx_assets_files_status ON assets.files USING btree (status);
 
 
 --
@@ -852,7 +852,7 @@ CREATE INDEX idx_storage_files_status ON storage.files USING btree (status);
 --
 
 ALTER TABLE ONLY audit.activity_logs
-    ADD CONSTRAINT activity_logs_user_id_fkey FOREIGN KEY (user_id) REFERENCES auth.users(id) ON DELETE CASCADE;
+    ADD CONSTRAINT activity_logs_user_id_fkey FOREIGN KEY (user_id) REFERENCES identity.users(id) ON DELETE CASCADE;
 
 
 --
@@ -860,15 +860,15 @@ ALTER TABLE ONLY audit.activity_logs
 --
 
 ALTER TABLE ONLY audit.system_errors
-    ADD CONSTRAINT system_errors_user_id_fkey FOREIGN KEY (user_id) REFERENCES auth.users(id) ON DELETE SET NULL;
+    ADD CONSTRAINT system_errors_user_id_fkey FOREIGN KEY (user_id) REFERENCES identity.users(id) ON DELETE SET NULL;
 
 
 --
 -- Name: accounts accounts_user_id_fkey; Type: FK CONSTRAINT; Schema: auth; Owner: -
 --
 
-ALTER TABLE ONLY auth.accounts
-    ADD CONSTRAINT accounts_user_id_fkey FOREIGN KEY (user_id) REFERENCES auth.users(id) ON DELETE CASCADE;
+ALTER TABLE ONLY identity.accounts
+    ADD CONSTRAINT accounts_user_id_fkey FOREIGN KEY (user_id) REFERENCES identity.users(id) ON DELETE CASCADE;
 
 
 --
@@ -932,7 +932,7 @@ ALTER TABLE ONLY chat.messages
 --
 
 ALTER TABLE ONLY communication.channels
-    ADD CONSTRAINT channels_user_id_fkey FOREIGN KEY (user_id) REFERENCES auth.users(id) ON DELETE CASCADE;
+    ADD CONSTRAINT channels_user_id_fkey FOREIGN KEY (user_id) REFERENCES identity.users(id) ON DELETE CASCADE;
 
 
 --
@@ -940,7 +940,7 @@ ALTER TABLE ONLY communication.channels
 --
 
 ALTER TABLE ONLY jobs.background_tasks
-    ADD CONSTRAINT background_tasks_user_id_fkey FOREIGN KEY (user_id) REFERENCES auth.users(id) ON DELETE SET NULL;
+    ADD CONSTRAINT background_tasks_user_id_fkey FOREIGN KEY (user_id) REFERENCES identity.users(id) ON DELETE SET NULL;
 
 
 --
@@ -956,7 +956,7 @@ ALTER TABLE ONLY jobs.background_tasks
 --
 
 ALTER TABLE ONLY organizations.workspaces
-    ADD CONSTRAINT fk_organizations_workspaces_created_by FOREIGN KEY (created_by) REFERENCES auth.users(id) ON DELETE SET NULL;
+    ADD CONSTRAINT fk_organizations_workspaces_created_by FOREIGN KEY (created_by) REFERENCES identity.users(id) ON DELETE SET NULL;
 
 
 --
@@ -964,7 +964,7 @@ ALTER TABLE ONLY organizations.workspaces
 --
 
 ALTER TABLE ONLY organizations.memberships
-    ADD CONSTRAINT memberships_user_id_fkey FOREIGN KEY (user_id) REFERENCES auth.users(id) ON DELETE CASCADE;
+    ADD CONSTRAINT memberships_user_id_fkey FOREIGN KEY (user_id) REFERENCES identity.users(id) ON DELETE CASCADE;
 
 
 --
@@ -987,16 +987,16 @@ ALTER TABLE ONLY organizations.role_permissions
 -- Name: files files_owner_id_fkey; Type: FK CONSTRAINT; Schema: storage; Owner: -
 --
 
-ALTER TABLE ONLY storage.files
-    ADD CONSTRAINT files_owner_id_fkey FOREIGN KEY (owner_id) REFERENCES auth.users(id) ON DELETE CASCADE;
+ALTER TABLE ONLY assets.files
+    ADD CONSTRAINT files_owner_id_fkey FOREIGN KEY (owner_id) REFERENCES identity.users(id) ON DELETE CASCADE;
 
 
 --
 -- Name: files files_parent_id_fkey; Type: FK CONSTRAINT; Schema: storage; Owner: -
 --
 
-ALTER TABLE ONLY storage.files
-    ADD CONSTRAINT files_parent_id_fkey FOREIGN KEY (parent_id) REFERENCES storage.files(id) ON DELETE CASCADE;
+ALTER TABLE ONLY assets.files
+    ADD CONSTRAINT files_parent_id_fkey FOREIGN KEY (parent_id) REFERENCES assets.files(id) ON DELETE CASCADE;
 
 
 --

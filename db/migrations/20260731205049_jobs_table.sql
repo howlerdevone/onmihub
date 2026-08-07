@@ -22,7 +22,7 @@ CREATE TABLE jobs.background_tasks (
     
     -- Contextual accountability
     workspace_id UUID NOT NULL REFERENCES organizations.workspaces(id) ON DELETE CASCADE, -- Bound to the workspace
-    user_id UUID REFERENCES auth.users(id) ON DELETE SET NULL, -- Track which human triggered the task
+    user_id UUID REFERENCES identity.users(id) ON DELETE SET NULL, -- Track which human triggered the task
     
     created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP

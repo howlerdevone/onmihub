@@ -6,7 +6,7 @@ ALTER TABLE organizations.workspaces
 ALTER TABLE organizations.workspaces
   ADD CONSTRAINT fk_organizations_workspaces_created_by
   FOREIGN KEY (created_by)
-  REFERENCES auth.users(id)
+  REFERENCES identity.users(id)
   ON DELETE SET NULL;
 
 CREATE INDEX IF NOT EXISTS idx_organizations_workspaces_created_by
