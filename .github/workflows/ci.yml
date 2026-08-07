@@ -192,7 +192,7 @@ jobs:
 
       - name: Run database migrations
         env:
-          DATABASE_URL: ${{ secrets.NEON_DATABASE_URL_DIRECT }}
+          DATABASE_URL: ${{ secrets.DATABASE_URL_DIRECT }}
         run: dbmate --no-dump-schema up
 
       - name: Deploy to Cloud Run
@@ -205,5 +205,5 @@ jobs:
             --allow-unauthenticated \
             --port 8080 \
             --set-env-vars "HOST=0.0.0.0,OMNIHUB_RELOAD=false" \
-            --set-secrets "DATABASE_URL=neon-database-url-pooled:latest,SUPABASE_URL=supabase-url:latest,SUPABASE_ANON_KEY=supabase-anon-key:latest" \
+            --set-secrets "DATABASE_URL=database-url-pooled:latest,SUPABASE_URL=supabase-url:latest,SUPABASE_ANON_KEY=supabase-anon-key:latest" \
             --quiet
