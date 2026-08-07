@@ -50,15 +50,15 @@ async def create_workspace(
         "message": "Workspace with this slug already exists.",
         "code": "ORG_ALREADY_EXISTS",
       },
-    )
-  except Exception:
+    ) from None
+  except Exception as error:
     raise HTTPException(
       status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
       detail={
         "message": "Organization gateway error. Please contact support.",
         "code": "SYSTEM_ERROR",
       },
-    )
+    ) from error
 
 
 @router.get("/{workspace_id}", response_model=OrganizationContextResponse, status_code=status.HTTP_200_OK)
@@ -89,7 +89,7 @@ async def get_workspace(
         "message": "Workspace not found.",
         "code": "ORG_NOT_FOUND",
       },
-    )
+    ) from None
   except OrganizationAccessDeniedError:
     raise HTTPException(
       status_code=status.HTTP_403_FORBIDDEN,
@@ -97,12 +97,12 @@ async def get_workspace(
         "message": "Access denied to workspace.",
         "code": "ORG_ACCESS_DENIED",
       },
-    )
-  except Exception:
+    ) from None
+  except Exception as error:
     raise HTTPException(
       status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
       detail={
         "message": "Organization gateway error. Please contact support.",
         "code": "SYSTEM_ERROR",
       },
-    )
+    ) from error
