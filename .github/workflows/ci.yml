@@ -205,5 +205,5 @@ jobs:
             --allow-unauthenticated \
             --port 8080 \
             --set-env-vars "HOST=0.0.0.0,OMNIHUB_RELOAD=false" \
-            --set-secrets "DATABASE_URL=database-url-pooled:latest,SUPABASE_URL=supabase-url:latest,SUPABASE_ANON_KEY=supabase-anon-key:latest" \
+            --set-secrets "DATABASE_URL=DATABASE_URL_POOLED:latest,SUPABASE_URL=SUPABASE_URL:latest,SUPABASE_ANON_KEY=SUPABASE_ANON_KEY:latest" \
             --quiet
