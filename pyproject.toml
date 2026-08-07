@@ -40,6 +40,7 @@ dev = [
     { include-group = "test" },
     { include-group = "typecheck" },
     "asyncpg-stubs>=0.31.3",
+    "doppler-env>=0.3.1",
 ]
 lint = [
     "ruff",

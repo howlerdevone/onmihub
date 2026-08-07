@@ -117,3 +117,93 @@ jobs:
         uses: re-actors/alls-green@05ac9388f0aebcb5727afa17fcccfecd6f8ec5fe # v1.2.2
         with:
           jobs: ${{ toJSON(needs) }}
+
+  deploy:
+    name: Deploy to Cloud Run (production)
+    needs: all-checks-pass
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    runs-on: ubuntu-latest
+    environment: production
+    permissions:
+      contents: read
+      id-token: write
+      packages: write
+    env:
+      GCP_PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
+      GCP_REGION: ${{ secrets.GCP_REGION }}
+      SERVICE_NAME: omnihub-api
+      AR_REPO: omnihub
+      DBMATE_VERSION: v2.24.2
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
+
+      - name: Compute image tags
+        id: img
+        run: |
+          OWNER_LC="$(echo '${{ github.repository_owner }}' | tr '[:upper:]' '[:lower:]')"
+          GHCR_IMAGE="ghcr.io/${OWNER_LC}/omnihub"
+          AR_IMAGE="${GCP_REGION}-docker.pkg.dev/${GCP_PROJECT_ID}/${AR_REPO}/api"
+          {
+            echo "ghcr_image=${GHCR_IMAGE}"
+            echo "ar_image=${AR_IMAGE}"
+            echo "sha_tag=${GITHUB_SHA}"
+          } >> "$GITHUB_OUTPUT"
+
+      - uses: docker/setup-buildx-action@v3
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
+
+      - name: Set up gcloud
+        uses: google-github-actions/setup-gcloud@v2
+
+      - name: Configure Docker for Artifact Registry
+        run: gcloud auth configure-docker ${GCP_REGION}-docker.pkg.dev --quiet
+
+      - name: Build and push image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: true
+          tags: |
+            ${{ steps.img.outputs.ghcr_image }}:${{ steps.img.outputs.sha_tag }}
+            ${{ steps.img.outputs.ghcr_image }}:latest
+            ${{ steps.img.outputs.ar_image }}:${{ steps.img.outputs.sha_tag }}
+            ${{ steps.img.outputs.ar_image }}:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Install dbmate
+        run: |
+          curl -fsSL -o /usr/local/bin/dbmate \
+            "https://github.com/amacneil/dbmate/releases/download/${DBMATE_VERSION}/dbmate-linux-amd64"
+          chmod +x /usr/local/bin/dbmate
+
+      - name: Run database migrations
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL_DIRECT }}
+        run: dbmate --no-dump-schema up
+
+      - name: Deploy to Cloud Run
+        run: |
+          gcloud run deploy "${SERVICE_NAME}" \
+            --image "${{ steps.img.outputs.ar_image }}:${{ steps.img.outputs.sha_tag }}" \
+            --region "${GCP_REGION}" \
+            --project "${GCP_PROJECT_ID}" \
+            --platform managed \
+            --allow-unauthenticated \
+            --port 8080 \
+            --set-env-vars "HOST=0.0.0.0,OMNIHUB_RELOAD=false" \
+            --set-secrets "DATABASE_URL=database-url-pooled:latest,SUPABASE_URL=supabase-url:latest,SUPABASE_ANON_KEY=supabase-anon-key:latest" \
+            --quiet

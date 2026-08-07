@@ -30,6 +30,9 @@ coverage.xml
 .envrc
 .venv
 
+# Doppler local setup (per-developer project/config binding, no secrets)
+.doppler.yaml
+
 # uv
 #   Generally recommended to include uv.lock in version control for
 #   reproducibility. Uncomment for libraries where you want consumers
