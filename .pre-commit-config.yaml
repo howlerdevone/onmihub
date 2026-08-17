@@ -1,0 +1,38 @@
+repos:
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.6.9
+    hooks:
+      - id: ruff-format
+        name: Ruff format
+        stages: [commit]
+      - id: ruff
+        name: Ruff lint
+        stages: [commit]
+        args: [--fix]
+
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.5.0
+    hooks:
+      - id: trailing-whitespace
+        stages: [commit]
+      - id: end-of-file-fixer
+        stages: [commit]
+      - id: check-yaml
+        stages: [commit]
+      - id: check-added-large-files
+        args: ['--maxkb=1000']
+        stages: [commit]
+      - id: check-json
+        stages: [commit]
+      - id: detect-private-key
+        stages: [commit]
+
+  - repo: local
+    hooks:
+      - id: ty-typecheck
+        name: Type check with ty
+        entry: uv run ty check
+        language: system
+        types: [python]
+        stages: [commit]
+        pass_filenames: false

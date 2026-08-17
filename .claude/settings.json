@@ -1,0 +1,26 @@
+{
+  "description": "Omnihub - FastAPI Python Backend",
+  "model": "claude-opus-5",
+  "docs": ["CLAUDE.md"],
+  "permissions": {
+    "allow": [
+      "Bash(just *)",
+      "Bash(uv run *)",
+      "Bash(uv add *)",
+      "Bash(uv remove *)",
+      "Bash(uv sync)",
+      "Bash(docker *)",
+      "Bash(find . -name *)",
+      "Bash(grep -r *)",
+      "Bash(ls *)",
+      "Bash(git *)",
+      "Edit(**/src/**/*.py)",
+      "Edit(**/tests/**/*.py)",
+      "Edit(*.md)",
+      "Edit(*.toml)",
+      "Edit(*.yaml)",
+      "Edit(*.yml)",
+      "Read(*)"
+    ]
+  }
+}

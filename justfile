@@ -49,6 +49,24 @@ db-rollback:
 db-status:
     doppler run -- dbmate status
 
+# ------------------------------------------------------------------------------
+# PRE-COMMIT & GIT HOOKS
+# ------------------------------------------------------------------------------
+
+# Install pre-commit hooks
+pre-commit-install:
+    pip install pre-commit
+    pre-commit install
+    @echo "✓ Pre-commit hooks installed"
+
+# Run pre-commit on all files
+pre-commit-check:
+    pre-commit run --all-files
+
+# Uninstall pre-commit hooks
+pre-commit-uninstall:
+    pre-commit uninstall
+
 # Show available commands
 list:
     @just --list

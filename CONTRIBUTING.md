@@ -1,137 +1,297 @@
-# Contributing
+# Contributing to Omnihub
 
-Contributions are welcome, and they are greatly appreciated! Every little bit helps, and credit will always be given.
+Contributions are welcome! Thank you for helping improve Omnihub. This guide will help you get started.
 
-You can contribute in many ways:
+## Prerequisites
+
+- Python ≥ 3.12
+- Docker & Docker Compose
+- uv (Astral's Python package manager)
+- Git
+
+## Quick Start
+
+1. **Clone & Setup**
+   ```bash
+   git clone https://github.com/howlerdevone/omnihub.git
+   cd omnihub
+   uv sync
+   ```
+
+2. **Install Git Hooks** (Important!)
+   ```bash
+   just pre-commit-install
+   ```
+   This ensures code quality standards before commits.
+
+3. **Start Docker**
+   ```bash
+   just docker-up
+   just db-up
+   ```
 
 ## Types of Contributions
 
 ### Report Bugs
 
-Report bugs at https://github.com/nanishb/omnihub/issues.
+Report bugs at https://github.com/howlerdevone/omnihub/issues.
 
-If you are reporting a bug, please include:
-
-- Your operating system name and version.
-- Any details about your local setup that might be helpful in troubleshooting.
-- Detailed steps to reproduce the bug.
+Include:
+- Operating system and version
+- Steps to reproduce
+- Expected vs actual behavior
 
 ### Fix Bugs
 
-Look through the GitHub issues for bugs. Anything tagged with "bug" and "help wanted" is open to whoever wants to implement it.
+Look for issues tagged `bug` + `help wanted` at https://github.com/howlerdevone/omnihub/issues.
 
 ### Implement Features
 
-Look through the GitHub issues for features. Anything tagged with "enhancement" and "help wanted" is open to whoever wants to implement it.
+Look for issues tagged `enhancement` + `help wanted`.
 
 ### Write Documentation
 
-omnihub could always use more documentation, whether as part of the official docs, in docstrings, or even on the web in blog posts, articles, and such.
+Documentation improvements are always welcome:
+- Update [CLAUDE.md](CLAUDE.md) with new patterns
+- Add docstrings to code
+- Improve README or contributing guides
 
-To preview the docs locally:
-
-```sh
+Preview docs locally:
+```bash
 just docs-serve
 ```
 
-This starts a local server at http://localhost:8000 with live reload. Edit files in `docs/` or add docstrings to your code (the API reference page is auto-generated).
+## Development Workflow
 
-### Submit Feedback
+### 1. Create a Feature Branch
 
-The best way to send feedback is to file an issue at https://github.com/nanishb/omnihub/issues.
-
-If you are proposing a feature:
-
-- Explain in detail how it would work.
-- Keep the scope as narrow as possible, to make it easier to implement.
-- Remember that this is a volunteer-driven project, and that contributions are welcome :)
-
-## Get Started!
-
-Ready to contribute? Here's how to set up omnihub for local development.
-
-1. Fork the omnihub repo on GitHub.
-2. Clone your fork locally:
-
-   ```sh
-   git clone git@github.com:your_name_here/omnihub.git
-   ```
-
-3. Install your local copy with uv:
-
-   ```sh
-   cd omnihub/
-   uv sync
-   ```
-
-4. Create a branch for local development:
-
-   ```sh
-   git checkout -b name-of-your-bugfix-or-feature
-   ```
-
-   Now you can make your changes locally.
-
-5. When you're done making changes, check that your changes pass linting and the tests:
-
-   ```sh
-   just qa
-   ```
-
-   Or run the tests alone:
-
-   ```sh
-   just test
-   ```
-
-6. Commit your changes and push your branch to GitHub:
-
-   ```sh
-   git add .
-   git commit -m "Your detailed description of your changes."
-   git push origin name-of-your-bugfix-or-feature
-   ```
-
-7. Submit a pull request through the GitHub website.
-
-## Pull Request Guidelines
-
-Before you submit a pull request, check that it meets these guidelines:
-
-1. The pull request should include tests.
-2. If the pull request adds functionality, the docs should be updated. Put your new functionality into a function with a docstring, and add the feature to the list in README.md.
-3. The pull request should work for Python 3.12, 3.13, and 3.14. Tests run in GitHub Actions on every pull request to the main branch, make sure that the tests pass for all supported Python versions.
-
-## Tips
-
-To run a subset of tests:
-
-```sh
-uv run pytest tests/
+```bash
+git checkout -b feat/my-feature  # or fix/bug-name
 ```
 
-## Releasing a New Version
+### 2. Make Your Changes
 
-1. **Bump the version** and **write the changelog:**
-   ```bash
-   uv version <version>        # or: uv version --bump minor
-   ```
-   Then write `CHANGELOG/<version>.md`. See previous entries for the format.
-2. **Commit:**
-   ```bash
-   git add pyproject.toml uv.lock CHANGELOG/
-   git commit -m "Release <version>"
-   ```
-3. **Release:**
-   ```bash
-   just release
-   ```
-   This creates an annotated `v*` tag, pushes it to GitHub, and creates a
-   GitHub Release with the changelog contents as release notes. The tag
-   push triggers `.github/workflows/publish.yml`, which builds the package,
-   generates SLSA provenance attestations, and publishes to PyPI via
-   trusted publishing.
+Follow code standards:
+- **Code Style:** 2 spaces, max 120 line length
+- **Type Hints:** All functions must have type hints
+- **Testing:** Write tests for new features
+- **Imports:** Alphabetically sorted (enforced by Ruff)
 
-## Code of Conduct
+### 3. Run Quality Checks
 
-Please note that this project is released with a [Contributor Code of Conduct](CODE_OF_CONDUCT.md). By participating in this project you agree to abide by its terms.
+Before committing, run all checks:
+
+```bash
+just qa
+```
+
+This runs:
+- ✓ Code formatting (Ruff)
+- ✓ Linting (Ruff)
+- ✓ Type checking (ty)
+- ✓ Tests (pytest)
+
+Or individually:
+```bash
+uv run ruff format .        # Format code
+uv run ruff check . --fix   # Lint & fix
+uv run ty check .           # Type check
+just test                   # Run tests
+```
+
+### 4. Commit with Conventional Commits
+
+Use this format:
+```
+<type>(<scope>): <subject>
+```
+
+**Types:**
+- `feat:` - New feature
+- `fix:` - Bug fix
+- `refactor:` - Code refactoring
+- `perf:` - Performance improvement
+- `test:` - Adding/updating tests
+- `docs:` - Documentation
+- `chore:` - Dependencies, maintenance
+
+**Examples:**
+```bash
+git commit -m "feat(auth): add two-factor authentication"
+git commit -m "fix(db): handle null timezone values"
+git commit -m "refactor(models): simplify user entity"
+```
+
+### 5. Push & Open PR
+
+```bash
+git push origin feat/my-feature
+```
+
+Then open a Pull Request on GitHub with:
+- Clear title (follows Conventional Commits)
+- Description of changes
+- Link to related issues
+- Testing notes
+
+## Code Standards
+
+### Formatting
+
+Code formatting is automatic with Ruff:
+```bash
+uv run ruff format .
+```
+
+- **Indent:** 2 spaces (not tabs)
+- **Line Length:** 120 characters
+- **Tool:** Ruff (like Prettier for Python)
+
+### Type Checking
+
+Strict typing is required:
+```bash
+uv run ty check .
+```
+
+All functions must have type hints:
+```python
+async def create_user(email: str, password: str) -> User:
+    """Create a new user."""
+    ...
+```
+
+### API Responses
+
+Always use `CustomBaseModel` for responses:
+```python
+from omnihub.common import CustomBaseModel
+
+class UserResponse(CustomBaseModel):
+    first_name: str      # Code uses snake_case
+    preferred_language: str
+
+# Response JSON automatically converts to camelCase:
+# { "firstName": "...", "preferredLanguage": "..." }
+```
+
+## Testing
+
+Write tests for all new features:
+
+```bash
+# Run all tests
+just test
+
+# Run specific test
+uv run pytest tests/auth/test_login.py
+
+# Run with coverage report
+uv run coverage run -m pytest
+uv run coverage report
+```
+
+**Minimum Coverage:** 50%
+
+Tests are run in CI for Python 3.12, 3.13, and 3.14.
+
+## Database Changes
+
+If you modify the database schema:
+
+```bash
+# Create migration
+just db-new add_feature_to_users
+
+# Edit the SQL file in db/migrations/
+
+# Test it
+just db-up
+
+# Rollback if needed
+just db-rollback
+```
+
+## Architecture
+
+Omnihub uses Clean Architecture:
+
+```
+modules/
+├── domain/         # Entities, business logic
+├── application/    # Services, use cases
+├── infrastructure/ # Database, HTTP, external APIs
+└── dependencies/   # Dependency injection
+```
+
+When adding a module, follow this structure (see [CLAUDE.md](CLAUDE.md)).
+
+## Pre-commit Hooks
+
+Hooks automatically run before each commit:
+- Ruff format check
+- Ruff linting
+- Type checking (ty)
+- Detects trailing whitespace
+- Detects private keys
+
+To run manually:
+```bash
+just pre-commit-check
+```
+
+To skip hooks (not recommended):
+```bash
+git commit --no-verify
+```
+
+## PR Requirements
+
+Before submitting a PR, ensure:
+- ✓ Passes `just qa` locally
+- ✓ Includes tests for new features
+- ✓ Updates documentation (CLAUDE.md if architecture changes)
+- ✓ Follows Conventional Commits format
+- ✓ No merge conflicts with main branch
+- ✓ All CI checks pass
+
+## Debugging
+
+### View Database Schema
+```bash
+docker exec omnihub_postgres psql -U omni_user -d omnihub_dev -c "\d auth.users"
+```
+
+### Check Docker Logs
+```bash
+docker logs omnihub_postgres  # or omnihub_redis
+```
+
+### Type Check in Watch Mode
+```bash
+just type-check-watch
+```
+
+### Debug Tests
+```bash
+just pdb tests/path/to/test.py
+```
+
+## Resources
+
+- [CLAUDE.md](CLAUDE.md) - Project architecture & documentation
+- [FastAPI Docs](https://fastapi.tiangolo.com)
+- [SQLAlchemy Async](https://docs.sqlalchemy.org/en/20/orm/extensions/asyncio.html)
+- [Pydantic V2](https://docs.pydantic.dev/2.0/)
+- [Ruff](https://docs.astral.sh/ruff/)
+
+## Questions?
+
+- Check existing issues/PRs
+- Read CLAUDE.md for architecture details
+- Ask in PR comments
+- Create a discussion for design questions
+
+---
+
+Thank you for contributing! 🚀
