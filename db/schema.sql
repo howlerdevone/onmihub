@@ -231,12 +231,14 @@ CREATE TABLE auth.accounts (
 CREATE TABLE auth.users (
     id uuid DEFAULT gen_random_uuid() NOT NULL,
     email text,
-    display_name text,
     avatar_url text,
     preferred_language text,
     timezone text,
     created_at timestamp with time zone DEFAULT now() NOT NULL,
-    updated_at timestamp with time zone DEFAULT now() NOT NULL
+    updated_at timestamp with time zone DEFAULT now() NOT NULL,
+    provider_id uuid,
+    firstname text,
+    lastname text
 );
 
 
@@ -750,6 +752,13 @@ CREATE INDEX idx_auth_users_email ON auth.users USING btree (email);
 
 
 --
+-- Name: idx_auth_users_provider_id; Type: INDEX; Schema: auth; Owner: -
+--
+
+CREATE INDEX idx_auth_users_provider_id ON auth.users USING btree (provider_id);
+
+
+--
 -- Name: idx_billing_plan_limits_lookup; Type: INDEX; Schema: billing; Owner: -
 --
 
@@ -1020,4 +1029,6 @@ INSERT INTO public.schema_migrations (version) VALUES
     ('20260731205306'),
     ('20260731210918'),
     ('20260731211312'),
-    ('20260803123000');
+    ('20260803123000'),
+    ('20260815183519'),
+    ('20260817000100');

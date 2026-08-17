@@ -15,13 +15,14 @@ class UserPgIdentityAdapter(UserIdentityProviderPort):
     """
     row = await self.db.fetchrow(
       """
-      INSERT INTO auth.users (id, email, display_name, preferred_language, timezone)
-      VALUES ($1, $2, $3, $4, $5)
-      RETURNING id, email, display_name, preferred_language, timezone
+      INSERT INTO auth.users (id, email, firstname, lastname, preferred_language, timezone)
+      VALUES ($1, $2, $3, $4, $5, $6)
+      RETURNING id, email, firstname, lastname, preferred_language, timezone
       """,
       user.id,
       user.email,
-      user.display_name,
+      user.firstname,
+      user.lastname,
       user.preferred_language,
       user.timezone,
     )
@@ -30,7 +31,8 @@ class UserPgIdentityAdapter(UserIdentityProviderPort):
     return User(
       id=row["id"],
       email=row["email"],
-      display_name=row["display_name"],
+      firstname=row["firstname"],
+      lastname=row["lastname"],
       preferred_language=row["preferred_language"],
       timezone=row["timezone"],
     )
@@ -46,7 +48,8 @@ class UserPgIdentityAdapter(UserIdentityProviderPort):
     return User(
       id=row["id"],
       email=row["email"],
-      display_name=row["display_name"],
+      firstname=row["firstname"],
+      lastname=row["lastname"],
       preferred_language=row["preferred_language"],
       timezone=row["timezone"],
     )

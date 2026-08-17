@@ -2,14 +2,16 @@ from __future__ import annotations
 
 from uuid import UUID
 
-from pydantic import BaseModel, EmailStr
+from pydantic import EmailStr
+
+from omnihub.common import CustomBaseModel
 
 
-class RegisterUserRequest(BaseModel):
+class RegisterUserRequest(CustomBaseModel):
   email: EmailStr
   workspace_name: str
 
 
-class RegisterUserResponse(BaseModel):
+class RegisterUserResponse(CustomBaseModel):
   user_id: UUID
   workspace_id: UUID

@@ -3,15 +3,15 @@ from __future__ import annotations
 from datetime import datetime
 from uuid import UUID
 
-from pydantic import BaseModel
+from omnihub.common import CustomBaseModel
 
 
-class CreateWorkspaceRequest(BaseModel):
+class CreateWorkspaceRequest(CustomBaseModel):
   name: str
   slug: str | None = None
 
 
-class WorkspaceResponse(BaseModel):
+class WorkspaceResponse(CustomBaseModel):
   id: UUID
   name: str
   slug: str
@@ -20,7 +20,7 @@ class WorkspaceResponse(BaseModel):
   updated_at: datetime
 
 
-class OrganizationContextResponse(BaseModel):
+class OrganizationContextResponse(CustomBaseModel):
   workspace: WorkspaceResponse
   role: str
   permissions: list[str]

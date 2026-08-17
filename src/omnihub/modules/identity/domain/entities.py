@@ -8,7 +8,8 @@ from uuid import UUID
 class User:
   id: UUID
   email: str
-  display_name: str | None = None
+  firstname: str | None = None
+  lastname: str | None = None
   preferred_language: str | None = None
   timezone: str | None = None
   access_token: str | None = None

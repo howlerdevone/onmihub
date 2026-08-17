@@ -11,7 +11,8 @@ from omnihub.modules.auth.infrastructure.http.schemas import RegistrationRequest
 class RegistrationInput:
   email: str
   password: str
-  display_name: str | None = None
+  firstname: str | None = None
+  lastname: str | None = None
   preferred_language: str | None = None
   timezone: str | None = None
 
@@ -20,7 +21,8 @@ def map_registration_request(payload: RegistrationRequest) -> RegistrationInput:
   return RegistrationInput(
     email=str(payload.email),
     password=payload.password,
-    display_name=payload.display_name,
+    firstname=payload.firstname,
+    lastname=payload.lastname,
     preferred_language=payload.preferred_language,
     timezone=payload.timezone,
   )
@@ -34,7 +36,8 @@ def map_login_user(
   return User(
     id=user_id,
     email=email,
-    display_name=None,
+    firstname=None,
+    lastname=None,
     preferred_language=None,
     timezone=None,
   )
@@ -48,7 +51,8 @@ def map_registration_user(
   return User(
     id=user_id,
     email=data.email,
-    display_name=data.display_name,
+    firstname=data.firstname,
+    lastname=data.lastname,
     preferred_language=data.preferred_language,
     timezone=data.timezone,
   )
