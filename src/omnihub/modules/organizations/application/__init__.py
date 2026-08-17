@@ -2,4 +2,5 @@
 
 from .service import OrganizationsApplicationService
 
+
 __all__ = ["OrganizationsApplicationService"]

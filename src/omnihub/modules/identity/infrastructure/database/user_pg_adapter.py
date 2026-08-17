@@ -27,7 +27,7 @@ class UserPgIdentityAdapter(UserIdentityProviderPort):
       user.timezone,
     )
     if not row:
-      raise RuntimeError("Failed to create user in auth.users")
+      raise RuntimeError("Failed to create user in identity.users")
     return User(
       id=row["id"],
       email=row["email"],
@@ -42,7 +42,7 @@ class UserPgIdentityAdapter(UserIdentityProviderPort):
     Retrieve a user from the database by their email address.
     Returns None if no user is found.
     """
-    row = await self.db.fetchrow("SELECT * FROM auth.users WHERE email = $1", email)
+    row = await self.db.fetchrow("SELECT * FROM identity.users WHERE email = $1", email)
     if not row:
       return None
     return User(

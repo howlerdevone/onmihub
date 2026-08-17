@@ -3,7 +3,18 @@
     "allow": [
       "Bash(uv run *)",
       "Bash(curl *)",
-      "PowerShell(uv run *)"
+      "PowerShell(uv run *)",
+      "Bash(doppler --version)",
+      "PowerShell(doppler *)",
+      "Bash(uv remove *)",
+      "Bash(uv add *)",
+      "Bash(DOPPLER_ENV=1 DOPPLER_ENV_LOGGING=1 uv run python -c \"import os; print\\('AFTER doppler-env: DATABASE_URL=', os.environ.get\\('DATABASE_URL', '<unset>'\\)\\)\")",
+      "Bash(just --list)",
+      "WebFetch(domain:github.com)",
+      "Bash(git ls-remote *)",
+      "Bash(git add *)",
+      "Bash(git commit -m ' *)",
+      "Bash(git push *)"
     ]
   }
 }

@@ -32,7 +32,7 @@ CREATE TABLE organizations.workspaces (
 CREATE TABLE organizations.memberships (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     workspace_id UUID NOT NULL REFERENCES organizations.workspaces(id) ON DELETE CASCADE,
-    user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+    user_id UUID NOT NULL REFERENCES identity.users(id) ON DELETE CASCADE,
     role organizations.workspace_role_enum NOT NULL DEFAULT 'member',
     
     created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,

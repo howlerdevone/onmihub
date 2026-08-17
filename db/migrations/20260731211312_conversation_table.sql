@@ -16,7 +16,7 @@ CREATE TYPE chat.message_source_enum AS ENUM ('web', 'whatsapp', 'telegram');
 -- Maps physical phone numbers or chat IDs to internal User IDs
 CREATE TABLE communication.channels (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+    user_id UUID NOT NULL REFERENCES identity.users(id) ON DELETE CASCADE,
     
     platform VARCHAR(30) NOT NULL,               -- 'whatsapp' or 'telegram'
     platform_chat_id VARCHAR(100) NOT NULL,       -- External identifier (e.g. '50688888888' or telegram internal integer)

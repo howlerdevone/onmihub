@@ -1,5 +1,8 @@
 import os
+
 from supabase import AsyncClient, acreate_client
+
+
 # Note: environment loading is intentionally performed at application startup
 # (e.g. in `omnihub.cli`) to keep this module focused solely on Supabase
 # client creation and to avoid side-effects during library import.

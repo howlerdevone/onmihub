@@ -1,5 +1,8 @@
-from fastapi import APIRouter, HTTPException, status, Depends
+from fastapi import APIRouter, Depends, HTTPException, status
+
 from omnihub.modules.auth.application.service import AuthApplicationService
+from omnihub.modules.auth.dependencies.auth_provider_dependency import get_auth_service
+from omnihub.modules.auth.domain.exceptions import AuthError, InvalidCredentialsError, UserAlreadyExistsError
 from omnihub.modules.auth.infrastructure.http.mappers import map_registration_request
 from omnihub.modules.auth.infrastructure.http.schemas import (
   AuthUserResponse,
@@ -10,8 +13,7 @@ from omnihub.modules.auth.infrastructure.http.schemas import (
   RegistrationRequest,
   RegistrationResponse,
 )
-from omnihub.modules.auth.dependencies.auth_provider_dependency import get_auth_service
-from omnihub.modules.auth.domain.exceptions import AuthError, InvalidCredentialsError, UserAlreadyExistsError
+
 
 router = APIRouter(prefix="/v1/auth", tags=["Authentication Operations"])
 
@@ -44,13 +46,13 @@ async def login_gateway(payload: LoginRequest, auth_service: AuthApplicationServ
     raise HTTPException(
       status_code=status.HTTP_401_UNAUTHORIZED,
       detail={"message": "The provided email or password... is incorrect", "code": "AUTH_INVALID_CREDENTIALS"},
-    )
+    ) from None
 
   except UserAlreadyExistsError:
     raise HTTPException(
       status_code=status.HTTP_409_CONFLICT,
       detail={"message": "A user with this email already exists.", "code": "AUTH_USER_ALREADY_EXISTS"},
-    )
+    ) from None
 
   except Exception as error:
     raise HTTPException(
@@ -59,7 +61,7 @@ async def login_gateway(payload: LoginRequest, auth_service: AuthApplicationServ
         "message": "Authentication gateway error. Please contact support." + str(error),
         "code": "SYSTEM ERROR",
       },
-    )
+    ) from error
 
 
 @router.post("/register", response_model=RegistrationResponse, status_code=status.HTTP_201_CREATED)
@@ -88,13 +90,13 @@ async def register_gateway(
     raise HTTPException(
       status_code=status.HTTP_401_UNAUTHORIZED,
       detail={"message": "The provided email or password is incorrect", "code": "AUTH_INVALID_CREDENTIALS"},
-    )
+    ) from None
 
   except UserAlreadyExistsError:
     raise HTTPException(
       status_code=status.HTTP_409_CONFLICT,
       detail={"message": "A user with this email already exists.", "code": "AUTH_USER_ALREADY_EXISTS"},
-    )
+    ) from None
 
   except Exception as error:
     raise HTTPException(
@@ -103,7 +105,7 @@ async def register_gateway(
         "message": "Authentication gateway error. Please contact support." + str(error),
         "code": "SYSTEM ERROR",
       },
-    )
+    ) from error
 
 
 @router.post("/refresh", response_model=RefreshSessionResponse, status_code=status.HTTP_200_OK)
@@ -125,7 +127,7 @@ async def refresh_gateway(
     raise HTTPException(
       status_code=status.HTTP_401_UNAUTHORIZED,
       detail={"message": "The provided refresh token is invalid.", "code": "AUTH_INVALID_CREDENTIALS"},
-    )
+    ) from None
 
   except Exception as error:
     raise HTTPException(
@@ -134,4 +136,4 @@ async def refresh_gateway(
         "message": "Authentication gateway error. Please contact support." + str(error),
         "code": "SYSTEM ERROR",
       },
-    )
+    ) from error

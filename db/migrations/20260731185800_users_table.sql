@@ -1,8 +1,8 @@
 -- migrate:up
 
-CREATE SCHEMA IF NOT EXISTS auth;
+CREATE SCHEMA IF NOT EXISTS identity;
 
-CREATE TABLE auth.users (
+CREATE TABLE identity.users (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     email TEXT,
     display_name TEXT,
@@ -13,10 +13,10 @@ CREATE TABLE auth.users (
     updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
-CREATE INDEX idx_auth_users_email ON auth.users (email);
+CREATE INDEX idx_identity_users_email ON identity.users (email);
 
 -- migrate:down
 
-DROP TABLE IF EXISTS auth.users;
-DROP SCHEMA IF EXISTS auth;
+DROP TABLE IF EXISTS identity.users;
+DROP SCHEMA IF EXISTS identity;
 

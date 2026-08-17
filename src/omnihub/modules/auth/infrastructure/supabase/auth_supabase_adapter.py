@@ -6,7 +6,7 @@ from supabase import AsyncClient
 
 from omnihub.common.time import parse_timestamp
 from omnihub.modules.auth.domain.entities import AuthSession
-from omnihub.modules.auth.domain.exceptions import InvalidCredentialsError, AuthError, UserAlreadyExistsError
+from omnihub.modules.auth.domain.exceptions import AuthError, InvalidCredentialsError, UserAlreadyExistsError
 from omnihub.modules.auth.ports.auth_provider_port import AuthProviderPort
 
 

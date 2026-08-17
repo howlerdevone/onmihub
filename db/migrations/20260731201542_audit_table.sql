@@ -18,7 +18,7 @@ CREATE TABLE audit.system_errors (
     traceback TEXT,                               -- Full Python traceback trace containing exact file lines
     
     -- Contextual relationship
-    user_id UUID REFERENCES auth.users(id) ON DELETE SET NULL, -- Retain system bugs even if the user profile is deleted
+    user_id UUID REFERENCES identity.users(id) ON DELETE SET NULL, -- Retain system bugs even if the user profile is deleted
     
     created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
@@ -26,7 +26,7 @@ CREATE TABLE audit.system_errors (
 -- 3. Maintain historical record of dangerous mutations
 CREATE TABLE audit.activity_logs (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE, -- Remove activity logs if the account is erased
+    user_id UUID NOT NULL REFERENCES identity.users(id) ON DELETE CASCADE, -- Remove activity logs if the account is erased
     
     -- Action fingerprint
     action VARCHAR(100) NOT NULL,                 -- Action identifier (e.g., 'file.purge', 'mcp.disconnect')
