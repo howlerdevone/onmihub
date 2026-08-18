@@ -11,9 +11,9 @@ from omnihub.modules.identity.domain.entities import User
 class AuthSession:
   id: UUID
   user_id: UUID
-  access_token: str
-  refresh_token: str
-  expires_at: datetime
+  access_token: str | None = None
+  refresh_token: str | None = None
+  expires_at: datetime | None = None
   created_at: datetime = field(default_factory=lambda: datetime.now(UTC))
   user: User | None = None
   email: str | None = None

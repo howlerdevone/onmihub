@@ -36,9 +36,9 @@ class LoginResponse(CustomBaseModel):
   """
 
   status: str
-  access_token: str
-  refresh_token: str
-  expires_at: datetime
+  access_token: str | None = None
+  refresh_token: str | None = None
+  expires_at: datetime | None = None
   user: AuthUserResponse | None = None
 
 
@@ -48,9 +48,9 @@ class RefreshSessionRequest(CustomBaseModel):
 
 class RefreshSessionResponse(CustomBaseModel):
   status: str
-  access_token: str
-  refresh_token: str
-  expires_at: datetime
+  access_token: str | None = None
+  refresh_token: str | None = None
+  expires_at: datetime | None = None
 
 
 class RegistrationRequest(CustomBaseModel):
@@ -75,7 +75,7 @@ class RegistrationResponse(CustomBaseModel):
   """
 
   status: str
-  access_token: str
-  refresh_token: str
-  expires_at: datetime
+  access_token: str | None = None
+  refresh_token: str | None = None
+  expires_at: datetime | None = None
   user: AuthUserResponse | None = None

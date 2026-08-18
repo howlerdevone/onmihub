@@ -57,14 +57,12 @@ All API responses are automatically converted to **camelCase** in responses whil
 ```python
 # Code
 class AuthUserResponse(CustomBaseModel):
-    firstname: str
-    preferred_language: str
+  firstname: str
+  preferred_language: str
+
 
 # Response JSON
-{
-  "firstname": "John",
-  "preferredLanguage": "es"
-}
+{"firstname": "John", "preferredLanguage": "es"}
 ```
 
 ## Database

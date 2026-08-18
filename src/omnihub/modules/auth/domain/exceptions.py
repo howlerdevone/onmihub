@@ -12,3 +12,7 @@ class SessionExpiredError(AuthError):
 
 class UserAlreadyExistsError(AuthError):
   """Raised when trying to register a user that already exists."""
+
+
+class EmailNotConfirmedError(AuthError):
+  """Raised when a user's email has not been confirmed yet."""

@@ -157,8 +157,8 @@ uv run ty check .
 All functions must have type hints:
 ```python
 async def create_user(email: str, password: str) -> User:
-    """Create a new user."""
-    ...
+  """Create a new user."""
+  ...
 ```
 
 ### API Responses
@@ -167,9 +167,11 @@ Always use `CustomBaseModel` for responses:
 ```python
 from omnihub.common import CustomBaseModel
 
+
 class UserResponse(CustomBaseModel):
-    first_name: str      # Code uses snake_case
-    preferred_language: str
+  first_name: str  # Code uses snake_case
+  preferred_language: str
+
 
 # Response JSON automatically converts to camelCase:
 # { "firstName": "...", "preferredLanguage": "..." }

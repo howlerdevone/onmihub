@@ -16,17 +16,17 @@ SET client_min_messages = warning;
 SET row_security = off;
 
 --
+-- Name: assets; Type: SCHEMA; Schema: -; Owner: -
+--
+
+CREATE SCHEMA assets;
+
+
+--
 -- Name: audit; Type: SCHEMA; Schema: -; Owner: -
 --
 
 CREATE SCHEMA audit;
-
-
---
--- Name: auth; Type: SCHEMA; Schema: -; Owner: -
---
-
-CREATE SCHEMA identity;
 
 
 --
@@ -58,6 +58,13 @@ CREATE SCHEMA communication;
 
 
 --
+-- Name: identity; Type: SCHEMA; Schema: -; Owner: -
+--
+
+CREATE SCHEMA identity;
+
+
+--
 -- Name: jobs; Type: SCHEMA; Schema: -; Owner: -
 --
 
@@ -72,10 +79,15 @@ CREATE SCHEMA organizations;
 
 
 --
--- Name: storage; Type: SCHEMA; Schema: -; Owner: -
+-- Name: file_status_enum; Type: TYPE; Schema: assets; Owner: -
 --
 
-CREATE SCHEMA assets;
+CREATE TYPE assets.file_status_enum AS ENUM (
+    'pending',
+    'processing',
+    'ready',
+    'failed'
+);
 
 
 --
@@ -87,19 +99,6 @@ CREATE TYPE audit.log_level_enum AS ENUM (
     'warning',
     'error',
     'critical'
-);
-
-
---
--- Name: provider_enum; Type: TYPE; Schema: auth; Owner: -
---
-
-CREATE TYPE identity.provider_enum AS ENUM (
-    'local',
-    'google',
-    'github',
-    'apple',
-    'microsoft'
 );
 
 
@@ -136,6 +135,19 @@ CREATE TYPE chat.message_source_enum AS ENUM (
 
 
 --
+-- Name: provider_enum; Type: TYPE; Schema: identity; Owner: -
+--
+
+CREATE TYPE identity.provider_enum AS ENUM (
+    'local',
+    'google',
+    'github',
+    'apple',
+    'microsoft'
+);
+
+
+--
 -- Name: task_status_enum; Type: TYPE; Schema: jobs; Owner: -
 --
 
@@ -158,21 +170,28 @@ CREATE TYPE organizations.workspace_role_enum AS ENUM (
 );
 
 
---
--- Name: file_status_enum; Type: TYPE; Schema: storage; Owner: -
---
-
-CREATE TYPE assets.file_status_enum AS ENUM (
-    'pending',
-    'processing',
-    'ready',
-    'failed'
-);
-
-
 SET default_tablespace = '';
 
 SET default_table_access_method = heap;
+
+--
+-- Name: files; Type: TABLE; Schema: assets; Owner: -
+--
+
+CREATE TABLE assets.files (
+    id uuid DEFAULT gen_random_uuid() NOT NULL,
+    owner_id uuid NOT NULL,
+    parent_id uuid,
+    is_folder boolean DEFAULT false NOT NULL,
+    name character varying(255) NOT NULL,
+    storage_path text,
+    mime_type character varying(100),
+    size_bytes bigint DEFAULT 0,
+    status assets.file_status_enum DEFAULT 'pending'::assets.file_status_enum NOT NULL,
+    created_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    updated_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL
+);
+
 
 --
 -- Name: activity_logs; Type: TABLE; Schema: audit; Owner: -
@@ -203,42 +222,6 @@ CREATE TABLE audit.system_errors (
     traceback text,
     user_id uuid,
     created_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL
-);
-
-
---
--- Name: accounts; Type: TABLE; Schema: auth; Owner: -
---
-
-CREATE TABLE identity.accounts (
-    id uuid DEFAULT gen_random_uuid() NOT NULL,
-    user_id uuid NOT NULL,
-    provider identity.provider_enum NOT NULL,
-    provider_user_id character varying(255) NOT NULL,
-    access_token text,
-    refresh_token text,
-    expires_at timestamp with time zone,
-    scope text,
-    created_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
-    updated_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL
-);
-
-
---
--- Name: users; Type: TABLE; Schema: auth; Owner: -
---
-
-CREATE TABLE identity.users (
-    id uuid DEFAULT gen_random_uuid() NOT NULL,
-    email text,
-    avatar_url text,
-    preferred_language text,
-    timezone text,
-    created_at timestamp with time zone DEFAULT now() NOT NULL,
-    updated_at timestamp with time zone DEFAULT now() NOT NULL,
-    provider_id uuid,
-    firstname text,
-    lastname text
 );
 
 
@@ -365,6 +348,41 @@ CREATE TABLE communication.channels (
 
 
 --
+-- Name: accounts; Type: TABLE; Schema: identity; Owner: -
+--
+
+CREATE TABLE identity.accounts (
+    id uuid DEFAULT gen_random_uuid() NOT NULL,
+    provider identity.provider_enum NOT NULL,
+    provider_user_id character varying(255) NOT NULL,
+    access_token text,
+    refresh_token text,
+    expires_at timestamp with time zone,
+    scope text,
+    created_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    updated_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL
+);
+
+
+--
+-- Name: users; Type: TABLE; Schema: identity; Owner: -
+--
+
+CREATE TABLE identity.users (
+    id uuid DEFAULT gen_random_uuid() NOT NULL,
+    email text,
+    avatar_url text,
+    preferred_language text,
+    timezone text,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    updated_at timestamp with time zone DEFAULT now() NOT NULL,
+    provider_id uuid,
+    firstname text,
+    lastname text
+);
+
+
+--
 -- Name: background_tasks; Type: TABLE; Schema: jobs; Owner: -
 --
 
@@ -444,22 +462,19 @@ CREATE TABLE public.schema_migrations (
 
 
 --
--- Name: files; Type: TABLE; Schema: storage; Owner: -
+-- Name: files files_pkey; Type: CONSTRAINT; Schema: assets; Owner: -
 --
 
-CREATE TABLE assets.files (
-    id uuid DEFAULT gen_random_uuid() NOT NULL,
-    owner_id uuid NOT NULL,
-    parent_id uuid,
-    is_folder boolean DEFAULT false NOT NULL,
-    name character varying(255) NOT NULL,
-    storage_path text,
-    mime_type character varying(100),
-    size_bytes bigint DEFAULT 0,
-    status assets.file_status_enum DEFAULT 'pending'::assets.file_status_enum NOT NULL,
-    created_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
-    updated_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL
-);
+ALTER TABLE ONLY assets.files
+    ADD CONSTRAINT files_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: files unique_filename_per_folder; Type: CONSTRAINT; Schema: assets; Owner: -
+--
+
+ALTER TABLE ONLY assets.files
+    ADD CONSTRAINT unique_filename_per_folder UNIQUE (owner_id, parent_id, name, is_folder);
 
 
 --
@@ -476,38 +491,6 @@ ALTER TABLE ONLY audit.activity_logs
 
 ALTER TABLE ONLY audit.system_errors
     ADD CONSTRAINT system_errors_pkey PRIMARY KEY (id);
-
-
---
--- Name: accounts accounts_pkey; Type: CONSTRAINT; Schema: auth; Owner: -
---
-
-ALTER TABLE ONLY identity.accounts
-    ADD CONSTRAINT accounts_pkey PRIMARY KEY (id);
-
-
---
--- Name: accounts unique_provider_identity; Type: CONSTRAINT; Schema: auth; Owner: -
---
-
-ALTER TABLE ONLY identity.accounts
-    ADD CONSTRAINT unique_provider_identity UNIQUE (provider, provider_user_id);
-
-
---
--- Name: accounts unique_user_provider; Type: CONSTRAINT; Schema: auth; Owner: -
---
-
-ALTER TABLE ONLY identity.accounts
-    ADD CONSTRAINT unique_user_provider UNIQUE (user_id, provider);
-
-
---
--- Name: users users_pkey; Type: CONSTRAINT; Schema: auth; Owner: -
---
-
-ALTER TABLE ONLY identity.users
-    ADD CONSTRAINT users_pkey PRIMARY KEY (id);
 
 
 --
@@ -615,6 +598,30 @@ ALTER TABLE ONLY communication.channels
 
 
 --
+-- Name: accounts accounts_pkey; Type: CONSTRAINT; Schema: identity; Owner: -
+--
+
+ALTER TABLE ONLY identity.accounts
+    ADD CONSTRAINT accounts_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: accounts unique_provider_identity; Type: CONSTRAINT; Schema: identity; Owner: -
+--
+
+ALTER TABLE ONLY identity.accounts
+    ADD CONSTRAINT unique_provider_identity UNIQUE (provider, provider_user_id);
+
+
+--
+-- Name: users users_pkey; Type: CONSTRAINT; Schema: identity; Owner: -
+--
+
+ALTER TABLE ONLY identity.users
+    ADD CONSTRAINT users_pkey PRIMARY KEY (id);
+
+
+--
 -- Name: background_tasks background_tasks_celery_task_id_key; Type: CONSTRAINT; Schema: jobs; Owner: -
 --
 
@@ -687,19 +694,24 @@ ALTER TABLE ONLY public.schema_migrations
 
 
 --
--- Name: files files_pkey; Type: CONSTRAINT; Schema: storage; Owner: -
+-- Name: idx_assets_files_owner; Type: INDEX; Schema: assets; Owner: -
 --
 
-ALTER TABLE ONLY assets.files
-    ADD CONSTRAINT files_pkey PRIMARY KEY (id);
+CREATE INDEX idx_assets_files_owner ON assets.files USING btree (owner_id);
 
 
 --
--- Name: files unique_filename_per_folder; Type: CONSTRAINT; Schema: storage; Owner: -
+-- Name: idx_assets_files_parent; Type: INDEX; Schema: assets; Owner: -
 --
 
-ALTER TABLE ONLY assets.files
-    ADD CONSTRAINT unique_filename_per_folder UNIQUE (owner_id, parent_id, name, is_folder);
+CREATE INDEX idx_assets_files_parent ON assets.files USING btree (parent_id);
+
+
+--
+-- Name: idx_assets_files_status; Type: INDEX; Schema: assets; Owner: -
+--
+
+CREATE INDEX idx_assets_files_status ON assets.files USING btree (status);
 
 
 --
@@ -728,34 +740,6 @@ CREATE INDEX idx_audit_system_errors_level ON audit.system_errors USING btree (l
 --
 
 CREATE INDEX idx_audit_system_errors_user ON audit.system_errors USING btree (user_id);
-
-
---
--- Name: idx_identity_accounts_lookup; Type: INDEX; Schema: auth; Owner: -
---
-
-CREATE INDEX idx_identity_accounts_lookup ON identity.accounts USING btree (provider, provider_user_id);
-
-
---
--- Name: idx_identity_accounts_user_id; Type: INDEX; Schema: auth; Owner: -
---
-
-CREATE INDEX idx_identity_accounts_user_id ON identity.accounts USING btree (user_id);
-
-
---
--- Name: idx_identity_users_email; Type: INDEX; Schema: auth; Owner: -
---
-
-CREATE INDEX idx_identity_users_email ON identity.users USING btree (email);
-
-
---
--- Name: idx_auth_users_provider_id; Type: INDEX; Schema: auth; Owner: -
---
-
-CREATE INDEX idx_auth_users_provider_id ON auth.users USING btree (provider_id);
 
 
 --
@@ -791,6 +775,27 @@ CREATE INDEX idx_chat_messages_chronological_sequence ON chat.messages USING btr
 --
 
 CREATE INDEX idx_communication_channels_webhook_lookup ON communication.channels USING btree (platform, platform_chat_id) WHERE (is_verified = true);
+
+
+--
+-- Name: idx_identity_accounts_lookup; Type: INDEX; Schema: identity; Owner: -
+--
+
+CREATE INDEX idx_identity_accounts_lookup ON identity.accounts USING btree (provider, provider_user_id);
+
+
+--
+-- Name: idx_identity_users_email; Type: INDEX; Schema: identity; Owner: -
+--
+
+CREATE INDEX idx_identity_users_email ON identity.users USING btree (email);
+
+
+--
+-- Name: idx_identity_users_provider_id; Type: INDEX; Schema: identity; Owner: -
+--
+
+CREATE INDEX idx_identity_users_provider_id ON identity.users USING btree (provider_id);
 
 
 --
@@ -836,24 +841,19 @@ CREATE INDEX idx_organizations_workspaces_created_by ON organizations.workspaces
 
 
 --
--- Name: idx_assets_files_owner; Type: INDEX; Schema: storage; Owner: -
+-- Name: files files_owner_id_fkey; Type: FK CONSTRAINT; Schema: assets; Owner: -
 --
 
-CREATE INDEX idx_assets_files_owner ON assets.files USING btree (owner_id);
-
-
---
--- Name: idx_assets_files_parent; Type: INDEX; Schema: storage; Owner: -
---
-
-CREATE INDEX idx_assets_files_parent ON assets.files USING btree (parent_id);
+ALTER TABLE ONLY assets.files
+    ADD CONSTRAINT files_owner_id_fkey FOREIGN KEY (owner_id) REFERENCES identity.users(id) ON DELETE CASCADE;
 
 
 --
--- Name: idx_assets_files_status; Type: INDEX; Schema: storage; Owner: -
+-- Name: files files_parent_id_fkey; Type: FK CONSTRAINT; Schema: assets; Owner: -
 --
 
-CREATE INDEX idx_assets_files_status ON assets.files USING btree (status);
+ALTER TABLE ONLY assets.files
+    ADD CONSTRAINT files_parent_id_fkey FOREIGN KEY (parent_id) REFERENCES assets.files(id) ON DELETE CASCADE;
 
 
 --
@@ -870,14 +870,6 @@ ALTER TABLE ONLY audit.activity_logs
 
 ALTER TABLE ONLY audit.system_errors
     ADD CONSTRAINT system_errors_user_id_fkey FOREIGN KEY (user_id) REFERENCES identity.users(id) ON DELETE SET NULL;
-
-
---
--- Name: accounts accounts_user_id_fkey; Type: FK CONSTRAINT; Schema: auth; Owner: -
---
-
-ALTER TABLE ONLY identity.accounts
-    ADD CONSTRAINT accounts_user_id_fkey FOREIGN KEY (user_id) REFERENCES identity.users(id) ON DELETE CASCADE;
 
 
 --
@@ -993,22 +985,6 @@ ALTER TABLE ONLY organizations.role_permissions
 
 
 --
--- Name: files files_owner_id_fkey; Type: FK CONSTRAINT; Schema: storage; Owner: -
---
-
-ALTER TABLE ONLY assets.files
-    ADD CONSTRAINT files_owner_id_fkey FOREIGN KEY (owner_id) REFERENCES identity.users(id) ON DELETE CASCADE;
-
-
---
--- Name: files files_parent_id_fkey; Type: FK CONSTRAINT; Schema: storage; Owner: -
---
-
-ALTER TABLE ONLY assets.files
-    ADD CONSTRAINT files_parent_id_fkey FOREIGN KEY (parent_id) REFERENCES assets.files(id) ON DELETE CASCADE;
-
-
---
 -- PostgreSQL database dump complete
 --
 
@@ -1031,4 +1007,5 @@ INSERT INTO public.schema_migrations (version) VALUES
     ('20260731211312'),
     ('20260803123000'),
     ('20260815183519'),
-    ('20260817000100');
+    ('20260817000100'),
+    ('20260817000200');

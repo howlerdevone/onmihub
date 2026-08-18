@@ -34,10 +34,10 @@ CREATE TABLE organizations.memberships (
     workspace_id UUID NOT NULL REFERENCES organizations.workspaces(id) ON DELETE CASCADE,
     user_id UUID NOT NULL REFERENCES identity.users(id) ON DELETE CASCADE,
     role organizations.workspace_role_enum NOT NULL DEFAULT 'member',
-    
+
     created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    
+
     -- A user can only hold exactly one membership record per workspace
     CONSTRAINT unique_user_workspace_membership UNIQUE (workspace_id, user_id)
 );
@@ -92,7 +92,7 @@ ON CONFLICT (role, permission_id) DO NOTHING;
 
 -- migrate:down
 DROP TABLE IF EXISTS organizations.role_permissions;
-DROP TABLE IF EXISTS organizations.permissions; 
+DROP TABLE IF EXISTS organizations.permissions;
 DROP TABLE IF EXISTS organizations.memberships;
 DROP TABLE IF EXISTS organizations.workspaces;
 DROP TYPE IF EXISTS organizations.workspace_role_enum;

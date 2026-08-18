@@ -47,18 +47,18 @@ INSERT INTO catalog.areas (id, name) VALUES
 
 -- Map Matrix (Recommendations Engine)
 -- If user selects 'finance' -> recommend Google Drive and QuickBooks
-INSERT INTO catalog.app_areas (app_id, area_id) VALUES 
+INSERT INTO catalog.app_areas (app_id, area_id) VALUES
     ('google_drive', 'finance'),
     ('quickbooks', 'finance');
 
 -- If user selects 'management' -> recommend Google Drive, Outlook and Notion
-INSERT INTO catalog.app_areas (app_id, area_id) VALUES 
+INSERT INTO catalog.app_areas (app_id, area_id) VALUES
     ('google_drive', 'management'),
     ('outlook', 'management'),
     ('notion', 'management');
 
 -- If user selects 'legal' -> recommend Google Drive and Notion
-INSERT INTO catalog.app_areas (app_id, area_id) VALUES 
+INSERT INTO catalog.app_areas (app_id, area_id) VALUES
     ('google_drive', 'legal'),
     ('notion', 'legal');
 

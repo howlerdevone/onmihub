@@ -6,7 +6,12 @@ from supabase import AsyncClient
 
 from omnihub.common.time import parse_timestamp
 from omnihub.modules.auth.domain.entities import AuthSession
-from omnihub.modules.auth.domain.exceptions import AuthError, InvalidCredentialsError, UserAlreadyExistsError
+from omnihub.modules.auth.domain.exceptions import (
+  AuthError,
+  EmailNotConfirmedError,
+  InvalidCredentialsError,
+  UserAlreadyExistsError,
+)
 from omnihub.modules.auth.ports.auth_provider_port import AuthProviderPort
 
 
@@ -24,18 +29,27 @@ class SupabaseAuthAdapter(AuthProviderPort):
     Authenticate user with email and password via Supabase.
     Translates native Supabase response into our clean, agnostic AuthSession domain object.
     """
-    auth_response = await self.client.auth.sign_in_with_password(
-      {
-        "email": email,
-        "password": password,
-      }
-    )
+    try:
+      auth_response = await self.client.auth.sign_in_with_password(
+        {
+          "email": email,
+          "password": password,
+        }
+      )
+    except Exception as error:
+      error_code = getattr(error, "code", None)
+      if error_code == "email_not_confirmed":
+        raise EmailNotConfirmedError("Email not confirmed. Please check your inbox.") from error
+      raise AuthError("Authentication failed.") from error
 
     session = auth_response.session
     user = auth_response.user
 
-    if not session or not user:
+    if not user:
       raise InvalidCredentialsError("Invalid email or password.")
+
+    if not session:
+      raise InvalidCredentialsError("Email not confirmed. Please check your inbox.")
 
     return AuthSession(
       id=UUID(user.id),
@@ -58,10 +72,9 @@ class SupabaseAuthAdapter(AuthProviderPort):
       }
     )
 
-    session = auth_response.session
     user = auth_response.user
 
-    if not session or not user:
+    if not user:
       raise AuthError("Failed to create user.")
 
     if user.identities is not None and len(user.identities) == 0:
@@ -70,10 +83,10 @@ class SupabaseAuthAdapter(AuthProviderPort):
     return AuthSession(
       id=UUID(user.id),
       user_id=UUID(user.id),
-      access_token=session.access_token,
-      refresh_token=session.refresh_token,
+      access_token=None,
+      refresh_token=None,
       email=user.email,
-      expires_at=parse_timestamp(session.expires_at),
+      expires_at=None,
     )
 
   async def refresh_session(self, refresh_token: str) -> AuthSession:

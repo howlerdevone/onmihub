@@ -15,7 +15,7 @@ class UserPgIdentityAdapter(UserIdentityProviderPort):
     """
     row = await self.db.fetchrow(
       """
-      INSERT INTO auth.users (id, email, firstname, lastname, preferred_language, timezone)
+      INSERT INTO identity.users (id, email, firstname, lastname, preferred_language, timezone)
       VALUES ($1, $2, $3, $4, $5, $6)
       RETURNING id, email, firstname, lastname, preferred_language, timezone
       """,

@@ -18,13 +18,13 @@ CREATE TABLE billing.plans (
 CREATE TABLE billing.plan_limits (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     plan_id billing.plan_enum NOT NULL REFERENCES billing.plans(id) ON DELETE CASCADE,
-    
+
     limit_key VARCHAR(100) NOT NULL,              -- Target constraint identifier (e.g., 'max_storage_bytes', 'max_mcp_connections')
     limit_value BIGINT NOT NULL,                  -- Quantitative limit boundary (BIGINT avoids integer overflows for bytes or numbers)
-    
+
     created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    
+
     -- Prevent duplicate rule definitions for the exact same plan
     CONSTRAINT unique_plan_limit_key UNIQUE (plan_id, limit_key)
 );
@@ -34,10 +34,10 @@ CREATE TABLE billing.subscriptions (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     workspace_id UUID NOT NULL UNIQUE REFERENCES organizations.workspaces(id) ON DELETE CASCADE, -- Bound strictly to the workspace
     plan_id billing.plan_enum NOT NULL REFERENCES billing.plans(id),
-    
+
     status VARCHAR(50) NOT NULL DEFAULT 'active', -- Lifecycle states (e.g., 'active', 'past_due', 'canceled', 'trialing')
     current_period_end TIMESTAMP WITH TIME ZONE,  -- Synchronization timestamp for downstream payment gateways (e.g., Stripe)
-    
+
     created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP
 );

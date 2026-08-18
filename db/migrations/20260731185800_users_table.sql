@@ -19,4 +19,3 @@ CREATE INDEX idx_identity_users_email ON identity.users (email);
 
 DROP TABLE IF EXISTS identity.users;
 DROP SCHEMA IF EXISTS identity;
-

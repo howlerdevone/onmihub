@@ -4,12 +4,8 @@
 # macOS and Linux keep the default sh.
 set windows-shell := ["powershell.exe", "-NoLogo", "-Command"]
 
-# Enable doppler-env auto-injection for every Python process launched by this
-# justfile. The doppler-env .pth hook is a no-op unless DOPPLER_ENV is set, so
-# this line is what wires our commands to Doppler. Non-Python tools (dbmate)
-# are still wrapped explicitly with `doppler run --` below.
-export DOPPLER_ENV := "1"
-
+# Doppler is optional for local development (use if available, otherwise skip)
+# export DOPPLER_ENV := "1"
 
 # ------------------------------------------------------------------------------
 # INFRASTRUCTURE (Docker)
@@ -39,15 +35,15 @@ db-new NAME:
 db-up: docker-up
     @echo "Waiting for Postgres to respond..."
     @sleep 2
-    doppler run -- dbmate up
+    @if command -v doppler > /dev/null 2>&1; then doppler run -- dbmate up; else dbmate up; fi
 
 # Roll back the last applied migration
 db-rollback:
-    doppler run -- dbmate rollback
+    @if command -v doppler > /dev/null 2>&1; then doppler run -- dbmate rollback; else dbmate rollback; fi
 
 # Show the current migrations status
 db-status:
-    doppler run -- dbmate status
+    @if command -v doppler > /dev/null 2>&1; then doppler run -- dbmate status; else dbmate status; fi
 
 # ------------------------------------------------------------------------------
 # PRE-COMMIT & GIT HOOKS
@@ -96,6 +92,17 @@ qa:
     uv run --python=3.14 ruff check --select I --fix .
     uv run --python=3.14 ty check --output-format=concise .
     uv run --python=3.14 pytest
+
+# Smart commit: pre-commit + qa + git commit (only staged files)
+# Usage: just commit "feat: add login"
+commit MESSAGE:
+    @echo "🔍 Running pre-commit checks..."
+    pre-commit run --all-files || true
+    @echo "✨ Running quality checks (format, lint, type-check, test)..."
+    just qa
+    @echo "💾 Committing: {{MESSAGE}}"
+    git commit -m "{{MESSAGE}}"
+    @echo "✅ Done! Ready to push"
 
 # Run all the tests for all the supported Python versions
 testall:

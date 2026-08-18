@@ -17,7 +17,7 @@ def parse_timestamp(timestamp: int | float | str | None) -> datetime:
   """
   if timestamp is None:
     raise ValueError("Timestamp cannot be None")
-  if isinstance(timestamp, (int, float)):
+  if isinstance(timestamp, int | float):
     return datetime.fromtimestamp(timestamp, UTC)
 
   parsed = datetime.fromisoformat(timestamp.replace("Z", "+00:00"))
