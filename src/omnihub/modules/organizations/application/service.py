@@ -31,6 +31,26 @@ class OrganizationsApplicationService:
       role="owner",
     )
 
+  async def create_workspace_with_apps(
+    self,
+    *,
+    user_id: UUID,
+    name: str,
+    slug: str | None = None,
+    app_ids: list[str],
+  ) -> tuple[Workspace, list[str]]:
+    """Atomically create workspace with apps and assign owner membership."""
+    base_slug = slug or slugify(name)
+    workspace_slug = f"{base_slug}-{user_id.hex[:8]}"
+
+    return await self.workspace_provider.create_workspace_with_apps(
+      user_id=user_id,
+      name=name,
+      slug=workspace_slug,
+      app_ids=app_ids,
+      role="owner",
+    )
+
   async def get_workspace(
     self,
     *,

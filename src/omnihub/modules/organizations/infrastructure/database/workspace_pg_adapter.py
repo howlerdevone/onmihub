@@ -3,8 +3,10 @@ from __future__ import annotations
 from uuid import UUID
 
 from omnihub.common.db.pg_client import PgClient
+from omnihub.common.db.pg_error_codes import PostgresErrorCode
 from omnihub.modules.organizations.domain.entities import OrganizationContext, Workspace
 from omnihub.modules.organizations.domain.exceptions import (
+  InvalidAppSelectionError,
   OrganizationAccessDeniedError,
   OrganizationAlreadyExistsError,
   OrganizationNotFoundError,
@@ -56,7 +58,7 @@ class WorkspacePgAdapter(WorkspaceProviderPort):
       )
     except Exception as error:
       error_code = getattr(error, "sqlstate", None) or getattr(error, "code", None)
-      if error_code == "23505":
+      if error_code == PostgresErrorCode.UNIQUE_VIOLATION:
         raise OrganizationAlreadyExistsError(f"Workspace slug '{slug}' already exists") from error
       raise
 
@@ -137,3 +139,102 @@ class WorkspacePgAdapter(WorkspaceProviderPort):
     )
 
     return OrganizationContext(workspace=workspace, role=str(role), permissions=permissions)
+
+  async def create_workspace_with_apps(
+    self,
+    *,
+    user_id: UUID,
+    name: str,
+    slug: str,
+    app_ids: list[str],
+    role: str = "owner",
+  ) -> tuple[Workspace, list[str]]:
+    """Atomically create workspace, owner membership, and link selected apps."""
+    existing_owner_workspace = await self.db.fetchrow(
+      """
+      SELECT w.id
+      FROM organizations.workspaces w
+      INNER JOIN organizations.memberships m ON m.workspace_id = w.id
+      WHERE m.user_id = $1 AND m.role = 'owner'
+      LIMIT 1
+      """,
+      user_id,
+    )
+
+    if existing_owner_workspace:
+      raise OrganizationAlreadyExistsError("User already owns a workspace")
+
+    existing_workspace = await self.db.fetchrow(
+      """
+      SELECT w.id
+      FROM organizations.workspaces w
+      INNER JOIN organizations.memberships m ON m.workspace_id = w.id
+      WHERE m.user_id = $1
+        AND lower(w.name) = lower($2)
+      LIMIT 1
+      """,
+      user_id,
+      name,
+    )
+
+    if existing_workspace:
+      raise OrganizationAlreadyExistsError(f"Workspace '{name}' already exists for this user")
+
+    async with self.db.transaction() as tx:
+      try:
+        workspace_row = await tx.fetchrow(
+          """
+          INSERT INTO organizations.workspaces (name, slug, created_by)
+          VALUES ($1, $2, $3)
+          RETURNING id, name, slug, is_active, created_at, updated_at
+          """,
+          name,
+          slug,
+          user_id,
+        )
+      except Exception as error:
+        error_code = getattr(error, "sqlstate", None) or getattr(error, "code", None)
+        if error_code == PostgresErrorCode.UNIQUE_VIOLATION:
+          raise OrganizationAlreadyExistsError(f"Workspace slug '{slug}' already exists") from error
+        raise
+
+      if not workspace_row:
+        raise RuntimeError("Failed to create workspace")
+
+      await tx.execute(
+        """
+        INSERT INTO organizations.memberships (workspace_id, user_id, role)
+        VALUES ($1, $2, $3)
+        """,
+        workspace_row["id"],
+        user_id,
+        role,
+      )
+
+      if app_ids:
+        try:
+          await tx.execute(
+            """
+            INSERT INTO organizations.workspace_apps (workspace_id, app_id)
+            SELECT $1, unnest($2::uuid[])
+            """,
+            workspace_row["id"],
+            app_ids,
+          )
+        except Exception as error:
+          error_code = getattr(error, "sqlstate", None) or getattr(error, "code", None)
+          if error_code == PostgresErrorCode.FOREIGN_KEY_VIOLATION:
+            raise InvalidAppSelectionError(f"One or more app_ids do not exist in the catalog: {app_ids}") from error
+          raise
+
+    return (
+      Workspace(
+        id=workspace_row["id"],
+        name=workspace_row["name"],
+        slug=workspace_row["slug"],
+        is_active=workspace_row["is_active"],
+        created_at=workspace_row["created_at"],
+        updated_at=workspace_row["updated_at"],
+      ),
+      app_ids,
+    )

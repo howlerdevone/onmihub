@@ -273,7 +273,7 @@ CREATE TABLE billing.subscriptions (
 --
 
 CREATE TABLE catalog.app_areas (
-    app_id character varying(50) NOT NULL,
+    app_id uuid NOT NULL,
     area_id character varying(50) NOT NULL
 );
 
@@ -283,13 +283,15 @@ CREATE TABLE catalog.app_areas (
 --
 
 CREATE TABLE catalog.apps (
-    id character varying(50) NOT NULL,
+    id uuid DEFAULT gen_random_uuid() NOT NULL,
     name character varying(100) NOT NULL,
     description text,
     icon_url text,
     is_active boolean DEFAULT true NOT NULL,
     created_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
-    updated_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL
+    updated_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    url text,
+    mcp_auth_config_template jsonb
 );
 
 
@@ -434,6 +436,32 @@ CREATE TABLE organizations.permissions (
 CREATE TABLE organizations.role_permissions (
     role organizations.workspace_role_enum NOT NULL,
     permission_id character varying(50) NOT NULL
+);
+
+
+--
+-- Name: workspace_app_credentials; Type: TABLE; Schema: organizations; Owner: -
+--
+
+CREATE TABLE organizations.workspace_app_credentials (
+    id uuid DEFAULT gen_random_uuid() NOT NULL,
+    workspace_id uuid NOT NULL,
+    app_id uuid NOT NULL,
+    user_id uuid NOT NULL,
+    ksm_key text NOT NULL,
+    created_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    updated_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL
+);
+
+
+--
+-- Name: workspace_apps; Type: TABLE; Schema: organizations; Owner: -
+--
+
+CREATE TABLE organizations.workspace_apps (
+    workspace_id uuid NOT NULL,
+    app_id uuid NOT NULL,
+    created_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL
 );
 
 
@@ -670,6 +698,30 @@ ALTER TABLE ONLY organizations.memberships
 
 
 --
+-- Name: workspace_app_credentials unique_workspace_app_user_credential; Type: CONSTRAINT; Schema: organizations; Owner: -
+--
+
+ALTER TABLE ONLY organizations.workspace_app_credentials
+    ADD CONSTRAINT unique_workspace_app_user_credential UNIQUE (workspace_id, app_id, user_id);
+
+
+--
+-- Name: workspace_app_credentials workspace_app_credentials_pkey; Type: CONSTRAINT; Schema: organizations; Owner: -
+--
+
+ALTER TABLE ONLY organizations.workspace_app_credentials
+    ADD CONSTRAINT workspace_app_credentials_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: workspace_apps workspace_apps_pkey; Type: CONSTRAINT; Schema: organizations; Owner: -
+--
+
+ALTER TABLE ONLY organizations.workspace_apps
+    ADD CONSTRAINT workspace_apps_pkey PRIMARY KEY (workspace_id, app_id);
+
+
+--
 -- Name: workspaces workspaces_pkey; Type: CONSTRAINT; Schema: organizations; Owner: -
 --
 
@@ -834,6 +886,27 @@ CREATE INDEX idx_organizations_memberships_workspace ON organizations.membership
 
 
 --
+-- Name: idx_organizations_workspace_app_credentials_user; Type: INDEX; Schema: organizations; Owner: -
+--
+
+CREATE INDEX idx_organizations_workspace_app_credentials_user ON organizations.workspace_app_credentials USING btree (user_id);
+
+
+--
+-- Name: idx_organizations_workspace_app_credentials_workspace; Type: INDEX; Schema: organizations; Owner: -
+--
+
+CREATE INDEX idx_organizations_workspace_app_credentials_workspace ON organizations.workspace_app_credentials USING btree (workspace_id);
+
+
+--
+-- Name: idx_organizations_workspace_apps_app; Type: INDEX; Schema: organizations; Owner: -
+--
+
+CREATE INDEX idx_organizations_workspace_apps_app ON organizations.workspace_apps USING btree (app_id);
+
+
+--
 -- Name: idx_organizations_workspaces_created_by; Type: INDEX; Schema: organizations; Owner: -
 --
 
@@ -985,6 +1058,46 @@ ALTER TABLE ONLY organizations.role_permissions
 
 
 --
+-- Name: workspace_app_credentials workspace_app_credentials_app_id_fkey; Type: FK CONSTRAINT; Schema: organizations; Owner: -
+--
+
+ALTER TABLE ONLY organizations.workspace_app_credentials
+    ADD CONSTRAINT workspace_app_credentials_app_id_fkey FOREIGN KEY (app_id) REFERENCES catalog.apps(id) ON DELETE CASCADE;
+
+
+--
+-- Name: workspace_app_credentials workspace_app_credentials_user_id_fkey; Type: FK CONSTRAINT; Schema: organizations; Owner: -
+--
+
+ALTER TABLE ONLY organizations.workspace_app_credentials
+    ADD CONSTRAINT workspace_app_credentials_user_id_fkey FOREIGN KEY (user_id) REFERENCES identity.users(id) ON DELETE CASCADE;
+
+
+--
+-- Name: workspace_app_credentials workspace_app_credentials_workspace_id_fkey; Type: FK CONSTRAINT; Schema: organizations; Owner: -
+--
+
+ALTER TABLE ONLY organizations.workspace_app_credentials
+    ADD CONSTRAINT workspace_app_credentials_workspace_id_fkey FOREIGN KEY (workspace_id) REFERENCES organizations.workspaces(id) ON DELETE CASCADE;
+
+
+--
+-- Name: workspace_apps workspace_apps_app_id_fkey; Type: FK CONSTRAINT; Schema: organizations; Owner: -
+--
+
+ALTER TABLE ONLY organizations.workspace_apps
+    ADD CONSTRAINT workspace_apps_app_id_fkey FOREIGN KEY (app_id) REFERENCES catalog.apps(id) ON DELETE CASCADE;
+
+
+--
+-- Name: workspace_apps workspace_apps_workspace_id_fkey; Type: FK CONSTRAINT; Schema: organizations; Owner: -
+--
+
+ALTER TABLE ONLY organizations.workspace_apps
+    ADD CONSTRAINT workspace_apps_workspace_id_fkey FOREIGN KEY (workspace_id) REFERENCES organizations.workspaces(id) ON DELETE CASCADE;
+
+
+--
 -- PostgreSQL database dump complete
 --
 
@@ -1008,4 +1121,8 @@ INSERT INTO public.schema_migrations (version) VALUES
     ('20260803123000'),
     ('20260815183519'),
     ('20260817000100'),
-    ('20260817000200');
+    ('20260817000200'),
+    ('20260818090000'),
+    ('20260818090100'),
+    ('20260818090200'),
+    ('20260818090300');

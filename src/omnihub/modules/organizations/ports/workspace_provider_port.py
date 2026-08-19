@@ -28,3 +28,15 @@ class WorkspaceProviderPort(Protocol):
   ) -> OrganizationContext:
     """Return a workspace plus the caller's role and permissions."""
     ...
+
+  async def create_workspace_with_apps(
+    self,
+    *,
+    user_id: UUID,
+    name: str,
+    slug: str,
+    app_ids: list[str],
+    role: str = "owner",
+  ) -> tuple[Workspace, list[str]]:
+    """Atomically create workspace, owner membership, and link selected apps."""
+    ...

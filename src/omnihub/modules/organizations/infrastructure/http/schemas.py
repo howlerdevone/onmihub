@@ -24,3 +24,19 @@ class OrganizationContextResponse(CustomBaseModel):
   workspace: WorkspaceResponse
   role: str
   permissions: list[str]
+
+
+class CreateWorkspaceWithAppsRequest(CustomBaseModel):
+  name: str
+  slug: str | None = None
+  app_ids: list[str]
+
+
+class WorkspaceWithAppsResponse(CustomBaseModel):
+  id: UUID
+  name: str
+  slug: str
+  is_active: bool
+  created_at: datetime
+  updated_at: datetime
+  app_ids: list[str]

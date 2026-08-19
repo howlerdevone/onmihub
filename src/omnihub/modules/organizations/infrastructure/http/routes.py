@@ -8,14 +8,17 @@ from omnihub.modules.auth.dependencies import get_authenticated_user_id
 from omnihub.modules.organizations.application.service import OrganizationsApplicationService
 from omnihub.modules.organizations.dependencies.workspace_dependency import get_organizations_service
 from omnihub.modules.organizations.domain.exceptions import (
+  InvalidAppSelectionError,
   OrganizationAccessDeniedError,
   OrganizationAlreadyExistsError,
   OrganizationNotFoundError,
 )
 from omnihub.modules.organizations.infrastructure.http.schemas import (
   CreateWorkspaceRequest,
+  CreateWorkspaceWithAppsRequest,
   OrganizationContextResponse,
   WorkspaceResponse,
+  WorkspaceWithAppsResponse,
 )
 
 
@@ -49,6 +52,55 @@ async def create_workspace(
       detail={
         "message": "Workspace with this slug already exists.",
         "code": "ORG_ALREADY_EXISTS",
+      },
+    ) from None
+  except Exception as error:
+    raise HTTPException(
+      status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+      detail={
+        "message": "Organization gateway error. Please contact support.",
+        "code": "SYSTEM_ERROR",
+      },
+    ) from error
+
+
+@router.post("/onboarding", response_model=WorkspaceWithAppsResponse, status_code=status.HTTP_201_CREATED)
+async def create_workspace_with_apps(
+  payload: CreateWorkspaceWithAppsRequest,
+  current_user_id: UUID = Depends(get_authenticated_user_id),
+  service: OrganizationsApplicationService = Depends(get_organizations_service),
+):
+  """Atomically create workspace, owner membership, and link selected apps in one transaction."""
+  try:
+    workspace, app_ids = await service.create_workspace_with_apps(
+      user_id=current_user_id,
+      name=payload.name,
+      slug=payload.slug,
+      app_ids=payload.app_ids,
+    )
+    return WorkspaceWithAppsResponse(
+      id=workspace.id,
+      name=workspace.name,
+      slug=workspace.slug,
+      is_active=workspace.is_active,
+      created_at=workspace.created_at,
+      updated_at=workspace.updated_at,
+      app_ids=app_ids,
+    )
+  except OrganizationAlreadyExistsError as error:
+    raise HTTPException(
+      status_code=status.HTTP_409_CONFLICT,
+      detail={
+        "message": str(error),
+        "code": "ORG_ALREADY_EXISTS",
+      },
+    ) from None
+  except InvalidAppSelectionError as error:
+    raise HTTPException(
+      status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+      detail={
+        "message": str(error),
+        "code": "ORG_INVALID_APP_SELECTION",
       },
     ) from None
   except Exception as error:

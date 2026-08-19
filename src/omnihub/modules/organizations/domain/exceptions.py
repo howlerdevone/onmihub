@@ -12,3 +12,7 @@ class OrganizationNotFoundError(OrganizationError):
 
 class OrganizationAccessDeniedError(OrganizationError):
   """Raised when user is not a member of the workspace."""
+
+
+class InvalidAppSelectionError(OrganizationError):
+  """Raised when one or more selected app_ids do not exist in the catalog."""
