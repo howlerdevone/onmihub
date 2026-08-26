@@ -5,7 +5,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from .common.logging import setup_logging
-from .gateway.database import database_lifespan, inject_db_connection_middleware
+from .gateway.database import app_lifespan, inject_db_connection_middleware
 from .gateway.router import get_central_application_router
 
 
@@ -19,7 +19,7 @@ def create_app() -> FastAPI:
     title="Omnihub API Engine",
     description=("Hexagonal, DDD-driven multi-tenant Agentic AI infrastructure orchestrator."),
     version="1.0.0",
-    lifespan=database_lifespan,
+    lifespan=app_lifespan,
   )
 
   # CORS

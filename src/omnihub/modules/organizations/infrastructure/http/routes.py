@@ -20,6 +20,7 @@ from omnihub.modules.organizations.infrastructure.http.schemas import (
   WorkspaceResponse,
   WorkspaceWithAppsResponse,
 )
+from omnihub.modules.storage.domain.exceptions import StorageProvisioningError
 
 
 router = APIRouter(prefix="/v1/organizations", tags=["Organization Operations"])
@@ -101,6 +102,14 @@ async def create_workspace_with_apps(
       detail={
         "message": str(error),
         "code": "ORG_INVALID_APP_SELECTION",
+      },
+    ) from None
+  except StorageProvisioningError as error:
+    raise HTTPException(
+      status_code=status.HTTP_502_BAD_GATEWAY,
+      detail={
+        "message": str(error),
+        "code": "ORG_STORAGE_PROVISIONING_FAILED",
       },
     ) from None
   except Exception as error:

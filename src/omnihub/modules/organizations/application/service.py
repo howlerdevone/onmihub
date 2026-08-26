@@ -3,15 +3,24 @@ from __future__ import annotations
 from uuid import UUID
 
 from omnihub.common import slugify
+from omnihub.modules.assets.application.service import FilesApplicationService
 from omnihub.modules.organizations.domain.entities import OrganizationContext, Workspace
 from omnihub.modules.organizations.ports.workspace_provider_port import WorkspaceProviderPort
+from omnihub.modules.storage.application.service import StorageApplicationService
 
 
 class OrganizationsApplicationService:
   """Application service orchestrating workspace lifecycle workflows."""
 
-  def __init__(self, workspace_provider: WorkspaceProviderPort) -> None:
+  def __init__(
+    self,
+    workspace_provider: WorkspaceProviderPort,
+    storage_service: StorageApplicationService,
+    files_service: FilesApplicationService,
+  ) -> None:
     self.workspace_provider = workspace_provider
+    self.storage_service = storage_service
+    self.files_service = files_service
 
   async def create_workspace(
     self,
@@ -43,13 +52,28 @@ class OrganizationsApplicationService:
     base_slug = slug or slugify(name)
     workspace_slug = f"{base_slug}-{user_id.hex[:8]}"
 
-    return await self.workspace_provider.create_workspace_with_apps(
+    workspace, app_ids = await self.workspace_provider.create_workspace_with_apps(
       user_id=user_id,
       name=name,
       slug=workspace_slug,
       app_ids=app_ids,
       role="owner",
     )
+
+    await self.storage_service.execute_create_workspace_folder(
+      workspace_id=str(workspace.id),
+      user_id=str(user_id),
+    )
+
+    storage_path = f"{workspace.id}/{user_id}/"
+    await self.files_service.execute_create_folder(
+      workspace_id=workspace.id,
+      owner_id=user_id,
+      name=workspace.slug,
+      storage_path=storage_path,
+    )
+
+    return workspace, app_ids
 
   async def get_workspace(
     self,

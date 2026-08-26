@@ -8,6 +8,7 @@ from fastapi import FastAPI, Request
 from fastapi.responses import Response
 
 from omnihub.common.db.pg_client import PgClient
+from omnihub.gateway.gcs_storage import get_gcs_client
 from omnihub.gateway.supabase import get_supabase_client
 
 
@@ -18,10 +19,10 @@ DATABASE_DSN = os.environ.get("DATABASE_URL", "postgres://omni_user:omni_passwor
 
 
 @contextlib.asynccontextmanager
-async def database_lifespan(app: FastAPI):
+async def app_lifespan(app: FastAPI):
   """
-  Manages the global setup and safety cleanup of the high-performance asyncpg
-  pool connection during application boot and graceful system shutdown boundaries.
+  Manages the global setup and safety cleanup of all shared services
+  (database, authentication, storage) during application boot and graceful shutdown.
   """
   app.state.db_pool = await asyncpg.create_pool(
     dsn=DATABASE_DSN,
@@ -38,6 +39,8 @@ async def database_lifespan(app: FastAPI):
   app.state.db_client = pg_client
 
   app.state.supabase_client = await get_supabase_client()
+
+  app.state.gcs_client = get_gcs_client()
 
   yield  # Application runs here while waiting for termination signals
 
