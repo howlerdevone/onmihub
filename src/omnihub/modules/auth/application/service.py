@@ -55,6 +55,15 @@ class AuthApplicationService:
 
     return auth_session, user
 
-  async def execute_refresh_flow(self, refresh_token: str) -> AuthSession:
-    """Refresh an authenticated session."""
-    return await self.auth_provider.refresh_session(refresh_token)
+  async def execute_refresh_flow(self, refresh_token: str) -> tuple[AuthSession, User | None]:
+    """
+    Refresh an authenticated session and resolve its local profile.
+
+    Returning the profile alongside the session keeps this flow symmetric with
+    login and registration, so a client rehydrating after a reload does not
+    need a second call to fetch the user it already has a session for.
+    """
+    auth_session = await self.auth_provider.refresh_session(refresh_token)
+    user = await self.identity_service.get_user(auth_session.user_id)
+
+    return auth_session, user

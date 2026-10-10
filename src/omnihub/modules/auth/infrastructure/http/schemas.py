@@ -52,6 +52,7 @@ class RefreshSessionResponse(CustomBaseModel):
   access_token: str | None = None
   refresh_token: str | None = None
   expires_at: datetime | None = None
+  user: AuthUserResponse | None = None
 
 
 class RegistrationRequest(CustomBaseModel):

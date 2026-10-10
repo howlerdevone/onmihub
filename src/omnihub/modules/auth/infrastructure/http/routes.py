@@ -113,15 +113,16 @@ async def register_gateway(
 async def refresh_gateway(
   payload: RefreshSessionRequest, auth_service: AuthApplicationService = Depends(get_auth_service)
 ):
-  """Exchange a refresh token for a new access token and session metadata."""
+  """Exchange a refresh token for a new access token, session metadata, and the user profile."""
   try:
-    session = await auth_service.execute_refresh_flow(payload.refresh_token)
+    session, user = await auth_service.execute_refresh_flow(payload.refresh_token)
 
     return RefreshSessionResponse(
       status="success",
       access_token=session.access_token,
       refresh_token=session.refresh_token,
       expires_at=session.expires_at,
+      user=AuthUserResponse.model_validate(user) if user else None,
     )
 
   except AuthError:

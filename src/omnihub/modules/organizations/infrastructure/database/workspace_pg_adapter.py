@@ -29,22 +29,8 @@ class WorkspacePgAdapter(WorkspaceProviderPort):
     slug: str,
     role: str = "owner",
   ) -> Workspace:
-    """Create a workspace only if this user does not already own one with the same name."""
-    existing_workspace = await self.db.fetchrow(
-      """
-      SELECT w.id
-      FROM organizations.workspaces w
-      INNER JOIN organizations.memberships m ON m.workspace_id = w.id
-      WHERE m.user_id = $1
-        AND lower(w.name) = lower($2)
-      LIMIT 1
-      """,
-      user_id,
-      name,
-    )
-
-    if existing_workspace:
-      raise OrganizationAlreadyExistsError(f"Workspace '{name}' already exists for this user")
+    """Create a workspace and assign the initial role to the owner user."""
+    await self.user_can_create_workspace(user_id=user_id, name=name)
 
     try:
       workspace_row = await self.db.fetchrow(
@@ -141,16 +127,13 @@ class WorkspacePgAdapter(WorkspaceProviderPort):
 
     return OrganizationContext(workspace=workspace, role=str(role), permissions=permissions)
 
-  async def create_workspace_with_apps(
+  async def user_can_create_workspace(
     self,
     *,
     user_id: UUID,
     name: str,
-    slug: str,
-    app_ids: list[str],
-    role: str = "owner",
-  ) -> tuple[Workspace, list[str]]:
-    """Atomically create workspace, owner membership, and link selected apps."""
+  ) -> None:
+    """Raise if the user already owns a workspace, or has one by this name. Invited memberships do not count."""
     existing_owner_workspace = await self.db.fetchrow(
       """
       SELECT w.id
@@ -181,14 +164,29 @@ class WorkspacePgAdapter(WorkspaceProviderPort):
     if existing_workspace:
       raise OrganizationAlreadyExistsError(f"Workspace '{name}' already exists for this user")
 
+  async def create_workspace_with_apps(
+    self,
+    *,
+    workspace_id: UUID,
+    user_id: UUID,
+    name: str,
+    slug: str,
+    app_ids: list[str],
+    storage_path: str,
+    role: str = "owner",
+  ) -> tuple[Workspace, list[str]]:
+    """Atomically create workspace, owner membership, linked apps, root folder, and onboarding."""
+    await self.user_can_create_workspace(user_id=user_id, name=name)
+
     async with self.db.transaction() as tx:
       try:
         workspace_row = await tx.fetchrow(
           """
-          INSERT INTO organizations.workspaces (name, slug, created_by)
-          VALUES ($1, $2, $3)
+          INSERT INTO organizations.workspaces (id, name, slug, created_by)
+          VALUES ($1, $2, $3, $4)
           RETURNING id, name, slug, is_active, created_at, updated_at
           """,
+          workspace_id,
           name,
           slug,
           user_id,
@@ -227,6 +225,30 @@ class WorkspacePgAdapter(WorkspaceProviderPort):
           if error_code == PostgresErrorCode.FOREIGN_KEY_VIOLATION:
             raise InvalidAppSelectionError(f"One or more app_ids do not exist in the catalog: {app_ids}") from error
           raise
+
+      # No unique-constraint handling needed: the workspace is new, so nothing
+      # can already occupy its root folder name.
+      await tx.execute(
+        """
+        INSERT INTO assets.files (workspace_id, owner_id, name, is_folder, storage_path)
+        VALUES ($1, $2, $3, TRUE, $4)
+        """,
+        workspace_id,
+        user_id,
+        slug,
+        storage_path,
+      )
+
+      await tx.execute(
+        """
+        UPDATE identity.users
+        SET onboarding_completed_at = $1
+        WHERE id = $2
+          AND onboarding_completed_at IS NULL
+        """,
+        datetime.now(UTC),
+        user_id,
+      )
 
     return (
       Workspace(
@@ -274,15 +296,3 @@ class WorkspacePgAdapter(WorkspaceProviderPort):
       )
       for row in rows
     ]
-
-  async def mark_user_onboarding_complete(
-    self,
-    *,
-    user_id: UUID,
-  ) -> None:
-    """Mark the user's onboarding as complete."""
-    await self.db.execute(
-      "UPDATE identity.users SET onboarding_completed_at = $1 WHERE id = $2",
-      datetime.now(UTC),
-      user_id,
-    )

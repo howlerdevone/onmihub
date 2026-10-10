@@ -4,8 +4,6 @@ from dataclasses import dataclass, field
 from datetime import UTC, datetime
 from uuid import UUID
 
-from omnihub.modules.identity.domain.entities import User
-
 
 @dataclass(frozen=True)
 class AuthSession:
@@ -15,5 +13,4 @@ class AuthSession:
   refresh_token: str | None = None
   expires_at: datetime | None = None
   created_at: datetime = field(default_factory=lambda: datetime.now(UTC))
-  user: User | None = None
   email: str | None = None

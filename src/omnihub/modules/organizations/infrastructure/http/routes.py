@@ -100,7 +100,7 @@ async def create_workspace_with_apps(
   current_user_id: UUID = Depends(get_authenticated_user_id),
   service: OrganizationsApplicationService = Depends(get_organizations_service),
 ):
-  """Atomically create workspace, owner membership, and link selected apps in one transaction."""
+  """Atomically create workspace, owner membership, link selected apps, and complete onboarding."""
   try:
     workspace, app_ids = await service.create_workspace_with_apps(
       user_id=current_user_id,
@@ -108,8 +108,6 @@ async def create_workspace_with_apps(
       slug=payload.slug,
       app_ids=payload.app_ids,
     )
-
-    await service.complete_onboarding(user_id=current_user_id)
 
     return WorkspaceWithAppsResponse(
       id=workspace.id,

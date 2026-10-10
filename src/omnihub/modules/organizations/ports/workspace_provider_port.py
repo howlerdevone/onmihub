@@ -29,16 +29,27 @@ class WorkspaceProviderPort(Protocol):
     """Return a workspace plus the caller's role and permissions."""
     ...
 
-  async def create_workspace_with_apps(
+  async def user_can_create_workspace(
     self,
     *,
     user_id: UUID,
     name: str,
+  ) -> None:
+    """Raise if the user already owns a workspace, or has one by this name. Invited memberships do not count."""
+    ...
+
+  async def create_workspace_with_apps(
+    self,
+    *,
+    workspace_id: UUID,
+    user_id: UUID,
+    name: str,
     slug: str,
     app_ids: list[str],
+    storage_path: str,
     role: str = "owner",
   ) -> tuple[Workspace, list[str]]:
-    """Atomically create workspace, owner membership, and link selected apps."""
+    """Atomically create workspace, owner membership, linked apps, root folder, and onboarding."""
     ...
 
   async def list_workspaces_for_user(
@@ -47,12 +58,4 @@ class WorkspaceProviderPort(Protocol):
     user_id: UUID,
   ) -> list[Workspace]:
     """List all workspaces the user is a member of."""
-    ...
-
-  async def mark_user_onboarding_complete(
-    self,
-    *,
-    user_id: UUID,
-  ) -> None:
-    """Mark the user's onboarding as complete."""
     ...

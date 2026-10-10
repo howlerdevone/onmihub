@@ -10,13 +10,28 @@ from omnihub.modules.auth.domain.exceptions import AuthError
 from omnihub.modules.auth.ports.auth_provider_port import AuthProviderPort
 
 
-bearer_scheme = HTTPBearer(auto_error=True)
+bearer_scheme = HTTPBearer(auto_error=False)
 
 
 async def get_current_user_token(
-  credentials: HTTPAuthorizationCredentials = Depends(bearer_scheme),
+  credentials: HTTPAuthorizationCredentials | None = Depends(bearer_scheme),
 ) -> str:
-  """Return the current authenticated bearer token."""
+  """
+  Return the current authenticated bearer token.
+
+  Uses auto_error=False so a missing or malformed Authorization header raises
+  401 instead of FastAPI's default 403, keeping every unauthenticated outcome
+  on the same status code for clients driving token refresh.
+  """
+  if credentials is None or not credentials.credentials:
+    raise HTTPException(
+      status_code=status.HTTP_401_UNAUTHORIZED,
+      detail={
+        "message": "Missing bearer token.",
+        "code": "AUTH_MISSING_TOKEN",
+      },
+      headers={"WWW-Authenticate": "Bearer"},
+    )
   return credentials.credentials
 
 
@@ -35,4 +50,5 @@ async def get_authenticated_user_id(
         "message": str(error),
         "code": "AUTH_INVALID_TOKEN",
       },
+      headers={"WWW-Authenticate": "Bearer"},
     ) from error

@@ -290,6 +290,12 @@ just pdb
 | GET | /v1/auth/health | Health check |
 | POST | /v1/auth/register | Register user |
 | POST | /v1/auth/login | Login user |
+| POST | /v1/auth/refresh | Exchange a refresh token for a new session |
+
+`login`, `register` and `refresh` all return the session tokens plus the `user`
+profile, so a client can rehydrate state from any of them with one call. Note
+that `refresh` returns a **rotated** `refreshToken` — persist the one in the
+response, as the previous value stops being valid.
 
 Register body:
 
@@ -313,11 +319,12 @@ Login body:
 }
 ```
 
-### Identity — /identity
+### Users — /v1/users
 
 | Method | Path | Description |
 |---|---|---|
-| GET | /identity/health | Health check |
+| GET | /v1/users/health | Health check |
+| GET | /v1/users/me | Get current user profile (Bearer token) |
 
 ### Organizations — /v1/organizations
 
@@ -326,7 +333,12 @@ Private endpoints using Bearer token.
 | Method | Path | Description |
 |---|---|---|
 | POST | /v1/organizations | Create workspace for current user |
+| GET | /v1/organizations/workspaces/me | List workspaces the current user belongs to |
 | GET | /v1/organizations/{workspace_id} | Get workspace context for current user |
+
+A user may own **one** workspace. Both creation endpoints return `409` once they
+do. Memberships in workspaces owned by others are unlimited and never count
+toward this, so `workspaces/me` can list many while creation stays closed.
 
 Create workspace body:
 
