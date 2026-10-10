@@ -76,3 +76,6 @@ celerybeat.pid
 *.pem
 *.key
 *.p12
+
+# Google Cloud credentials
+google-s3-auth.json

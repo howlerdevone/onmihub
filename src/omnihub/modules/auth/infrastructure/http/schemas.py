@@ -17,6 +17,7 @@ class AuthUserResponse(CustomBaseModel):
   lastname: str | None = None
   preferred_language: str | None = None
   timezone: str | None = None
+  onboarding_completed_at: datetime | None = None
 
 
 class LoginRequest(CustomBaseModel):

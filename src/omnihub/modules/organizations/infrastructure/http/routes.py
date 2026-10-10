@@ -26,6 +26,35 @@ from omnihub.modules.storage.domain.exceptions import StorageProvisioningError
 router = APIRouter(prefix="/v1/organizations", tags=["Organization Operations"])
 
 
+@router.get("/workspaces/me", response_model=list[WorkspaceResponse], status_code=status.HTTP_200_OK)
+async def list_user_workspaces(
+  current_user_id: UUID = Depends(get_authenticated_user_id),
+  service: OrganizationsApplicationService = Depends(get_organizations_service),
+):
+  """List all workspaces the current user is a member of."""
+  try:
+    workspaces = await service.list_workspaces(user_id=current_user_id)
+    return [
+      WorkspaceResponse(
+        id=workspace.id,
+        name=workspace.name,
+        slug=workspace.slug,
+        is_active=workspace.is_active,
+        created_at=workspace.created_at,
+        updated_at=workspace.updated_at,
+      )
+      for workspace in workspaces
+    ]
+  except Exception as error:
+    raise HTTPException(
+      status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+      detail={
+        "message": "Organization gateway error. Please contact support.",
+        "code": "SYSTEM_ERROR",
+      },
+    ) from error
+
+
 @router.post("", response_model=WorkspaceResponse, status_code=status.HTTP_201_CREATED)
 async def create_workspace(
   payload: CreateWorkspaceRequest,
@@ -79,6 +108,9 @@ async def create_workspace_with_apps(
       slug=payload.slug,
       app_ids=payload.app_ids,
     )
+
+    await service.complete_onboarding(user_id=current_user_id)
+
     return WorkspaceWithAppsResponse(
       id=workspace.id,
       name=workspace.name,

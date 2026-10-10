@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from uuid import UUID
+
 from omnihub.modules.identity.domain.entities import User
 from omnihub.modules.identity.domain.exceptions import UserAlreadyExistsError
 from omnihub.modules.identity.ports.user_identity_provider_port import UserIdentityProviderPort
@@ -17,3 +19,6 @@ class IdentityApplicationService:
     if existing_user:
       raise UserAlreadyExistsError(f"User with email {user.email} already exists.")
     return await self.user_identity_provider.create_user(user)
+
+  async def get_user(self, user_id: UUID) -> User | None:
+    return await self.user_identity_provider.get_user_by_id(user_id)

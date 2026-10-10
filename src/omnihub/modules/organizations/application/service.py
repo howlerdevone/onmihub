@@ -86,3 +86,19 @@ class OrganizationsApplicationService:
       workspace_id=workspace_id,
       user_id=user_id,
     )
+
+  async def list_workspaces(
+    self,
+    *,
+    user_id: UUID,
+  ) -> list[Workspace]:
+    """List all workspaces the user is a member of."""
+    return await self.workspace_provider.list_workspaces_for_user(user_id=user_id)
+
+  async def complete_onboarding(
+    self,
+    *,
+    user_id: UUID,
+  ) -> None:
+    """Mark the user's onboarding as complete."""
+    await self.workspace_provider.mark_user_onboarding_complete(user_id=user_id)

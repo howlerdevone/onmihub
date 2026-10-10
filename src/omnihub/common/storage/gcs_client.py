@@ -5,6 +5,7 @@ import json
 from typing import Any
 
 from google.cloud import storage
+from google.cloud.storage import Client
 
 
 class GcsClient:
@@ -22,7 +23,7 @@ class GcsClient:
       bucket_name: Name of the GCS bucket to operate on.
     """
     credentials_info: dict[str, Any] = json.loads(credentials_json)
-    self._client = storage.Client.from_service_account_info(credentials_info)
+    self._client: Client = storage.Client.from_service_account_info(credentials_info)
     self._bucket_name = bucket_name
 
   async def create_folder(self, path: str) -> None:

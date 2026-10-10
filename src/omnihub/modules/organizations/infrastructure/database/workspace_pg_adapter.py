@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from datetime import UTC, datetime
 from uuid import UUID
 
 from omnihub.common.db.pg_client import PgClient
@@ -237,4 +238,51 @@ class WorkspacePgAdapter(WorkspaceProviderPort):
         updated_at=workspace_row["updated_at"],
       ),
       app_ids,
+    )
+
+  async def list_workspaces_for_user(
+    self,
+    *,
+    user_id: UUID,
+  ) -> list[Workspace]:
+    """List all workspaces the user is a member of."""
+    rows = await self.db.fetch(
+      """
+      SELECT
+        w.id,
+        w.name,
+        w.slug,
+        w.is_active,
+        w.created_at,
+        w.updated_at
+      FROM organizations.workspaces w
+      INNER JOIN organizations.memberships m ON m.workspace_id = w.id
+      WHERE m.user_id = $1
+      ORDER BY w.created_at DESC
+      """,
+      user_id,
+    )
+
+    return [
+      Workspace(
+        id=row["id"],
+        name=row["name"],
+        slug=row["slug"],
+        is_active=row["is_active"],
+        created_at=row["created_at"],
+        updated_at=row["updated_at"],
+      )
+      for row in rows
+    ]
+
+  async def mark_user_onboarding_complete(
+    self,
+    *,
+    user_id: UUID,
+  ) -> None:
+    """Mark the user's onboarding as complete."""
+    await self.db.execute(
+      "UPDATE identity.users SET onboarding_completed_at = $1 WHERE id = $2",
+      datetime.now(UTC),
+      user_id,
     )

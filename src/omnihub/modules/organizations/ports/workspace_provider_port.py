@@ -40,3 +40,19 @@ class WorkspaceProviderPort(Protocol):
   ) -> tuple[Workspace, list[str]]:
     """Atomically create workspace, owner membership, and link selected apps."""
     ...
+
+  async def list_workspaces_for_user(
+    self,
+    *,
+    user_id: UUID,
+  ) -> list[Workspace]:
+    """List all workspaces the user is a member of."""
+    ...
+
+  async def mark_user_onboarding_complete(
+    self,
+    *,
+    user_id: UUID,
+  ) -> None:
+    """Mark the user's onboarding as complete."""
+    ...

@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from uuid import UUID
+
 from omnihub.common import PgClient
 from omnihub.modules.identity.domain.entities import User
 from omnihub.modules.identity.ports.user_identity_provider_port import UserIdentityProviderPort
@@ -35,6 +37,7 @@ class UserPgIdentityAdapter(UserIdentityProviderPort):
       lastname=row["lastname"],
       preferred_language=row["preferred_language"],
       timezone=row["timezone"],
+      onboarding_completed_at=row["onboarding_completed_at"],
     )
 
   async def get_user_by_email(self, email: str | None) -> User | None:
@@ -52,4 +55,23 @@ class UserPgIdentityAdapter(UserIdentityProviderPort):
       lastname=row["lastname"],
       preferred_language=row["preferred_language"],
       timezone=row["timezone"],
+      onboarding_completed_at=row["onboarding_completed_at"],
+    )
+
+  async def get_user_by_id(self, user_id: UUID) -> User | None:
+    """
+    Retrieve a user from the database by their ID.
+    Returns None if no user is found.
+    """
+    row = await self.db.fetchrow("SELECT * FROM identity.users WHERE id = $1", user_id)
+    if not row:
+      return None
+    return User(
+      id=row["id"],
+      email=row["email"],
+      firstname=row["firstname"],
+      lastname=row["lastname"],
+      preferred_language=row["preferred_language"],
+      timezone=row["timezone"],
+      onboarding_completed_at=row["onboarding_completed_at"],
     )

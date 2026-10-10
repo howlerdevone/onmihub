@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from typing import Protocol
+from uuid import UUID
 
 from omnihub.modules.identity.domain.entities import User
 
@@ -20,6 +21,13 @@ class UserIdentityProviderPort(Protocol):
   async def get_user_by_email(self, email: str | None) -> User | None:
     """
     Retrieve a user from the external Identity Provider by their email address.
+    Returns None if no user is found.
+    """
+    ...
+
+  async def get_user_by_id(self, user_id: UUID) -> User | None:
+    """
+    Retrieve a user from the external Identity Provider by their ID.
     Returns None if no user is found.
     """
     ...
