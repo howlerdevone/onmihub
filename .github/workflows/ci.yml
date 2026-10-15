@@ -134,7 +134,7 @@ jobs:
       SERVICE_NAME: omnihub-api
       AR_REPO: omnihub
       DBMATE_VERSION: v2.24.2
-      BUCKET_NAME: ${{ vars.BUCKET_NAME }}
+      BUCKET_NAME: ${{ secrets.BUCKET_NAME }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -233,11 +233,11 @@ jobs:
         run: |
           if [ -z "$BUCKET_NAME" ]; then
             echo "::error::BUCKET_NAME is empty or not visible to this job."
-            echo "Check: repo Settings → Secrets and variables → Actions → Variables,"
-            echo "and Settings → Environments → production → Environment variables."
+            echo "Check Settings → Environments → production → Environment secrets,"
+            echo "where the rest of this job's configuration lives."
             exit 1
           fi
-          echo "OK — BUCKET_NAME=${BUCKET_NAME}"
+          echo "OK — BUCKET_NAME is set"
 
       - name: Deploy to Cloud Run
         run: |
