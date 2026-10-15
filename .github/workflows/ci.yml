@@ -134,6 +134,7 @@ jobs:
       SERVICE_NAME: omnihub-api
       AR_REPO: omnihub
       DBMATE_VERSION: v2.24.2
+      BUCKET_NAME: ${{ vars.BUCKET_NAME }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -228,6 +229,16 @@ jobs:
           DATABASE_URL: ${{ secrets.DATABASE_URL_DIRECT }}
         run: dbmate --no-dump-schema up
 
+      - name: Verify BUCKET_NAME presence
+        run: |
+          if [ -z "$BUCKET_NAME" ]; then
+            echo "::error::BUCKET_NAME is empty or not visible to this job."
+            echo "Check: repo Settings → Secrets and variables → Actions → Variables,"
+            echo "and Settings → Environments → production → Environment variables."
+            exit 1
+          fi
+          echo "OK — BUCKET_NAME=${BUCKET_NAME}"
+
       - name: Deploy to Cloud Run
         run: |
           gcloud run deploy "${SERVICE_NAME}" \
@@ -237,6 +248,6 @@ jobs:
             --platform managed \
             --allow-unauthenticated \
             --port 8080 \
-            --set-env-vars "HOST=0.0.0.0,OMNIHUB_RELOAD=false" \
+            --set-env-vars "HOST=0.0.0.0,OMNIHUB_RELOAD=false,BUCKET_NAME=${BUCKET_NAME}" \
             --set-secrets "DATABASE_URL=DATABASE_URL_POOLED:latest,SUPABASE_URL=SUPABASE_URL:latest,SUPABASE_ANON_KEY=SUPABASE_ANON_KEY:latest" \
             --quiet
