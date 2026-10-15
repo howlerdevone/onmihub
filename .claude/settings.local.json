@@ -15,7 +15,15 @@
       "Bash(git add *)",
       "Bash(git commit -m ' *)",
       "Bash(git push *)",
-      "Bash(python3 -c \"import sys; sys.path.insert\\(0, '/Users/nan/Documents/code/omnihub/src'\\); from omnihub.common import GcsClient; from omnihub.gateway import app_lifespan, get_gcs_client; print\\('All imports OK'\\)\")"
+      "Bash(python3 -c \"import sys; sys.path.insert\\(0, '/Users/nan/Documents/code/omnihub/src'\\); from omnihub.common import GcsClient; from omnihub.gateway import app_lifespan, get_gcs_client; print\\('All imports OK'\\)\")",
+      "Bash(gcloud auth *)",
+      "Bash(gcloud config *)",
+      "Bash(gcloud storage *)",
+      "Bash(gcloud projects get-iam-policy howlerdev *)",
+      "Bash(gcloud iam service-accounts describe *)",
+      "Bash(doppler configure *)",
+      "PowerShell(Get-Command *)",
+      "PowerShell(foreach \\($n in @\\('GOOGLE_APPLICATION_CREDENTIALS','BUCKET_NAME','DOPPLER_TOKEN','DOPPLER_ENV'\\)\\) { foreach \\($s in @\\('User','Machine','Process'\\)\\) { $v = [Environment]::GetEnvironmentVariable\\($n,$s\\); if \\($v\\) { \"$n [$s] = SET \\(len $\\($v.Length\\)\\)\" } } }; \"done\")"
     ]
   }
 }
