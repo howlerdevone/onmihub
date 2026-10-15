@@ -14,16 +14,23 @@ class GcsClient:
   Provides async-friendly interface by wrapping blocking calls in asyncio.to_thread().
   """
 
-  def __init__(self, credentials_json: str, bucket_name: str):
+  def __init__(self, bucket_name: str, credentials_json: str | None = None):
     """
-    Initialize GCS client from service account JSON string and bucket name.
+    Initialize GCS client from a bucket name and, optionally, explicit credentials.
 
     Args:
-      credentials_json: Raw JSON string containing service account credentials.
       bucket_name: Name of the GCS bucket to operate on.
+      credentials_json: Raw JSON string containing service account credentials. When
+        omitted, Application Default Credentials are used — the ambient identity of
+        the host (a managed runtime's attached service account, or a local
+        `gcloud auth application-default login`), so no key material is needed.
     """
-    credentials_info: dict[str, Any] = json.loads(credentials_json)
-    self._client: Client = storage.Client.from_service_account_info(credentials_info)
+    self._client: Client
+    if credentials_json:
+      credentials_info: dict[str, Any] = json.loads(credentials_json)
+      self._client = storage.Client.from_service_account_info(credentials_info)
+    else:
+      self._client = storage.Client()
     self._bucket_name = bucket_name
 
   async def create_folder(self, path: str) -> None:
