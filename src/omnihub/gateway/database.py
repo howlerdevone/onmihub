@@ -1,6 +1,7 @@
 import contextlib
 import logging
 from collections.abc import Awaitable, Callable
+from urllib.parse import urlsplit
 
 import asyncpg
 from fastapi import FastAPI, Request
@@ -15,18 +16,25 @@ from omnihub.gateway.supabase import get_supabase_client
 logger = logging.getLogger(__name__)
 
 
+def _dsn_target(dsn: str) -> str:
+  """Describe a DSN as `host:port/database` for logs, leaving credentials out."""
+  parsed = urlsplit(dsn)
+  return f"{parsed.hostname or 'unknown'}:{parsed.port or 5432}{parsed.path}"
+
+
 @contextlib.asynccontextmanager
 async def app_lifespan(app: FastAPI):
   """
   Manages the global setup and safety cleanup of all shared services
   (database, authentication, storage) during application boot and graceful shutdown.
   """
+  # `min_size=5` provides reasonable pool floor for typical deployments
   app.state.db_pool = await asyncpg.create_pool(
     dsn=DATABASE_URL,
     min_size=5,
     max_size=20,
   )
-  logger.info("🚀 Database connection pool initialized (host: localhost, port: 5433)")
+  logger.info("🚀 Database connection pool initialized (%s)", _dsn_target(DATABASE_URL))
 
   # Create a PgClient instance that reuses the same asyncpg pool so
   # adapters expecting `PgClient` can operate normally.
@@ -55,8 +63,10 @@ async def inject_db_connection_middleware(
   before routing traffic to adapters, returning it safely upon request completion.
   """
   # Provide a `PgClient` instance to downstream handlers via request.state
-  # so repository/adapters that depend on `PgClient` can use it.
-  request.state.db_client = request.app.state.db_client
+  # so repository/adapters that depend on `PgClient` can use it. Read defensively:
+  # routes that need no database (the health probe) must stay answerable even when
+  # the pool was never built, and the ones that do need it fail at the point of use.
+  request.state.db_client = getattr(request.app.state, "db_client", None)
 
   # Propagate the execution flow to the downstream endpoint handlers
   response: Response = await call_next(request)
