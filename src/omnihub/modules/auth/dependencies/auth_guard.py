@@ -19,9 +19,9 @@ async def get_current_user_token(
   """
   Return the current authenticated bearer token.
 
-  Uses auto_error=False so a missing or malformed Authorization header raises
-  401 instead of FastAPI's default 403, keeping every unauthenticated outcome
-  on the same status code for clients driving token refresh.
+  Uses auto_error=False so a missing/malformed Authorization header raises 401
+  instead of FastAPI's default 403, keeping every unauthenticated outcome at the
+  same status code for clients driving token refresh.
   """
   if credentials is None or not credentials.credentials:
     raise HTTPException(

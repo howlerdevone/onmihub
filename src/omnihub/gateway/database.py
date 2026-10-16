@@ -1,6 +1,5 @@
 import contextlib
 import logging
-import os
 from collections.abc import Awaitable, Callable
 
 import asyncpg
@@ -8,14 +7,12 @@ from fastapi import FastAPI, Request
 from fastapi.responses import Response
 
 from omnihub.common.db.pg_client import PgClient
+from omnihub.config.settings import DATABASE_URL
 from omnihub.gateway.gcs_storage import get_gcs_client
 from omnihub.gateway.supabase import get_supabase_client
 
 
 logger = logging.getLogger(__name__)
-
-# Extract database credentials or fallback to local Docker composition settings on port 5433
-DATABASE_DSN = os.environ.get("DATABASE_URL", "postgres://omni_user:omni_password@localhost:5433/omnihub_dev")
 
 
 @contextlib.asynccontextmanager
@@ -25,7 +22,7 @@ async def app_lifespan(app: FastAPI):
   (database, authentication, storage) during application boot and graceful shutdown.
   """
   app.state.db_pool = await asyncpg.create_pool(
-    dsn=DATABASE_DSN,
+    dsn=DATABASE_URL,
     min_size=5,
     max_size=20,
   )
@@ -33,7 +30,7 @@ async def app_lifespan(app: FastAPI):
 
   # Create a PgClient instance that reuses the same asyncpg pool so
   # adapters expecting `PgClient` can operate normally.
-  pg_client = PgClient(dsn=DATABASE_DSN)
+  pg_client = PgClient(dsn=DATABASE_URL)
   # Attach the already-created pool to the PgClient to avoid double pools
   pg_client.pool = app.state.db_pool
   app.state.db_client = pg_client

@@ -1,8 +1,8 @@
 import base64
-import os
 from pathlib import Path
 
 from omnihub.common.storage import GcsClient
+from omnihub.config.settings import BUCKET_NAME, GOOGLE_APPLICATION_CREDENTIALS
 
 
 def get_gcs_client() -> GcsClient:
@@ -14,8 +14,8 @@ def get_gcs_client() -> GcsClient:
   1. File path: GOOGLE_APPLICATION_CREDENTIALS points to a JSON file
   2. Base64: GOOGLE_APPLICATION_CREDENTIALS contains base64-encoded JSON
   """
-  credentials_input = os.environ.get("GOOGLE_APPLICATION_CREDENTIALS")
-  bucket_name = os.environ.get("BUCKET_NAME")
+  credentials_input = GOOGLE_APPLICATION_CREDENTIALS
+  bucket_name = BUCKET_NAME
 
   if not credentials_input or not bucket_name:
     raise RuntimeError(

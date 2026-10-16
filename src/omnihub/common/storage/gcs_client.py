@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import asyncio
 import json
+from datetime import timedelta
 from typing import Any
 
 from google.cloud import storage
@@ -64,3 +65,28 @@ class GcsClient:
     """
     blob = self._client.bucket(self._bucket_name).blob(path)
     return await asyncio.to_thread(blob.download_as_bytes)
+
+  async def generate_signed_url(
+    self,
+    path: str,
+    method: str = "GET",
+    expiration_hours: int = 1,
+  ) -> str:
+    """
+    Generate a signed URL for direct access to a blob.
+
+    Args:
+      path: The object key path.
+      method: HTTP method ('GET', 'PUT', 'DELETE').
+      expiration_hours: URL expiration time in hours (default: 1 hour).
+
+    Returns:
+      Signed URL string.
+    """
+    blob = self._client.bucket(self._bucket_name).blob(path)
+    return await asyncio.to_thread(
+      blob.generate_signed_url,
+      version="v4",
+      expiration=timedelta(hours=expiration_hours),
+      method=method,
+    )

@@ -1,11 +1,6 @@
-import os
-
 from supabase import AsyncClient, acreate_client
 
-
-# Note: environment loading is intentionally performed at application startup
-# (e.g. in `omnihub.cli`) to keep this module focused solely on Supabase
-# client creation and to avoid side-effects during library import.
+from omnihub.config.settings import SUPABASE_ANON_KEY, SUPABASE_URL
 
 
 async def get_supabase_client() -> AsyncClient:
@@ -13,14 +8,10 @@ async def get_supabase_client() -> AsyncClient:
   Infrastructure factory utility to instantiate and retrieve the official
   Supabase client SDK using strict validated environment variables boundary.
   """
-  supabase_url = os.environ.get("SUPABASE_URL")
-  # Support both SUPABASE_KEY and SUPABASE_ANON_KEY variable names
-  supabase_key = os.environ.get("SUPABASE_KEY") or os.environ.get("SUPABASE_ANON_KEY")
-
-  if not supabase_url or not supabase_key:
+  if not SUPABASE_URL or not SUPABASE_ANON_KEY:
     raise RuntimeError(
-      "CRITICAL INFRASTRUCTURE FAILURE: SUPABASE_URL and SUPABASE_KEY "
+      "CRITICAL INFRASTRUCTURE FAILURE: SUPABASE_URL and SUPABASE_ANON_KEY "
       "must be properly set in your environment configuration parameters."
     )
 
-  return await acreate_client(supabase_url, supabase_key)
+  return await acreate_client(SUPABASE_URL, SUPABASE_ANON_KEY)
